@@ -140,23 +140,23 @@ def main():
             with row1[0]:
                 st.subheader("📊 피드빈 측정 리스트")                
                 # Data Table
-                event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['date','std_volume','std_amt','stock_ratio','desc']],
+                event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['date','stock_ratio','desc','std_volume','std_amt']],
                             column_config={
                                 "date": st.column_config.Column(
                                     label="측정일자",
                                 ),
-                                "std_volume": st.column_config.Column(
-                                    label="전체규격(㎥)",
-                                ),
-                                "std_amt": st.column_config.Column(
-                                    label="전체무게(ton)",
-                                ),
-                                "stock_ratio": st.column_config.Column(
+                                 "stock_ratio": st.column_config.Column(
                                     label="재고율(%)",
                                 ),
                                 "desc": st.column_config.Column(
                                     label="비고",
                                     width=200
+                                ),
+                                "std_volume": st.column_config.Column(
+                                    label="전체규격(㎥)",
+                                ),                               
+                                "std_amt": st.column_config.Column(
+                                    label="전체무게(ton)",
                                 )},
                             on_select='rerun',
                             selection_mode='single-row'
@@ -232,23 +232,23 @@ def main():
                                 on_change=updateSearchingDate)
                   
                 # Data Table (위와 동일한 형태로 중복성 방지 필요)
-                event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['date','std_volume','std_amt','stock_ratio','desc']],
+                event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['date','stock_ratio','desc','std_volume','std_amt']],
                         column_config={
                             "date": st.column_config.Column(
                                 label="측정일자",
+                            ),
+                              "stock_ratio": st.column_config.Column(
+                                label="재고율(%)",
+                            ),
+                            "desc": st.column_config.Column(
+                                label="비고",
+                                width=200 
                             ),
                             "std_volume": st.column_config.Column(
                                 label="전체규격(㎥)",
                             ),
                             "std_amt": st.column_config.Column(
                                 label="전체무게(ton)",
-                            ),
-                            "stock_ratio": st.column_config.Column(
-                                label="재고율(%)",
-                            ),
-                            "desc": st.column_config.Column(
-                                label="비고",
-                                width=200
                             )},
                         on_select='rerun',
                         selection_mode='single-row'
