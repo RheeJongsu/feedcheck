@@ -72,8 +72,8 @@ def Show3DFeedBin(dataRaw, dataSize):
     fig = go.Figure()
 
     ## Draw MeshGrid
-    fig = display.Draw3DMeshGrid(fig,dataModified)
-    
+    fig = display.Draw3DMeshGrid(fig,dataModified) 
+     
     ## Draw FeedBin
     FeedBinSizeR = [dataSize.bot2.iloc[0]/param.VOXEL_GAP/2, dataSize.mid2.iloc[0]/param.VOXEL_GAP/2,  dataSize.top2.iloc[0]/param.VOXEL_GAP/2,  dataSize.top1.iloc[0]/param.VOXEL_GAP/2]
     FeedBinSizeH = [0, dataSize.bot_H.iloc[0], dataSize.bot_H.iloc[0]+dataSize.mid_H.iloc[0], dataSize.bot_H.iloc[0]+dataSize.mid_H.iloc[0]+dataSize.top_H.iloc[0]]
@@ -85,7 +85,7 @@ def Show3DFeedBin(dataRaw, dataSize):
     z = dataModified[:,2]
     XYdrawRange = [20, 80]  ## 잘보이는 값을 수동으로 찾음 24.12.24
     ZdrawRange = [0, FeedBinSizeH[3]]
-    figureHeight = 800 
+    figureHeight = 600 
     
     display.Draw3DLayout(fig, "3D Mesh with Gridlines", XYdrawRange, ZdrawRange, figureHeight)  #관심영역 확대하여 출력
     
@@ -109,7 +109,7 @@ def Show3DFeed(dataRaw, dataSize):
     MinZ = int(min(z))
     ZdrawRange = [1.5*MinZ - 0.5 * MaxZ, 1.5 * MaxZ - 0.5 * MinZ]
     XYdrawRange = None
-    figureHeight = 800 #1000px
+    figureHeight = 600 #1000px
 
     display.Draw3DLayout(fig, "3D Mesh with Gridlines", XYdrawRange, ZdrawRange, figureHeight)  #관심영역 확대하여 출력
     fig = step3_func.Draw3DFeedAll(fig,dataModified,dataSize)
