@@ -158,24 +158,27 @@ def main():
                                 "std_amt": st.column_config.Column(
                                     label="전체무게(ton)",
                                 )},
+                            use_container_width=True,  # 전체 너비 확장
+                            height=250,  # 표의 높이 조절 (픽셀 단위)                            
                             on_select='rerun',
                             selection_mode='single-row'
                             )
-                                
+                 
+                
                 # HTML/CSS 스타일이 적용된 구분선 추가
-                st.markdown("<hr style='border:1px solid #8a5; margin:20px 0;'>", unsafe_allow_html=True)
+                st.markdown("<hr style='border:1px solid #76a; margin:1px 0; padding: 0;'>", unsafe_allow_html=True)
                 
                 # 상단 행 (초기 공백 생성)
                 placeholder = st.empty()
                 with placeholder:  # placeholder에 콘텐츠를 추가
                    st.markdown(
-                        '<p style="font-size: 18px; color: #ababab; font-weight: bold;">농장명  &nbsp &nbsp  측정일시 <p> '
-                        + '<p style="font-size: 18px; color: #ababab; font-weight: bold;">사료 재고율(%) &nbsp &nbsp  재고량 (ton)</p>', 
+                        '<p style="font-size: 15px; color: #ababab; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 1px 0;">농장명  &nbsp &nbsp  측정일시 </p> '
+                        + '<p style="font-size: 15px; color: #ababab; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 1px 0;">사료 재고율(%) &nbsp &nbsp  재고량 (ton)</p>', 
                         unsafe_allow_html=True
                     )
                 
                 # HTML/CSS 스타일이 적용된 구분선 추가
-                st.markdown("<hr style='border:1px solid #a26; margin:20px 0;'>", unsafe_allow_html=True)
+                st.markdown("<hr style='border:1px solid #a26; margin:1px 0; padding: 0;'>", unsafe_allow_html=True)
 
                 # Select Data
                 if len(event.selection['rows']):
@@ -183,7 +186,7 @@ def main():
                     dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)  # 거리 데이터 추출
                     # 사료통 크기 정보를 이용한 선택(동일 용량이 있는 경우 변경해야함) 
                     dataSize = step3_func.SelectSizeFeedBinFromSQL(st.session_state.mysqlFeedBinDataAll, st.session_state.mysqlDepthDataAll.std_volume[st.session_state.dataIndex])
-                      
+                    
                     st.session_state.dataRaw = dataRaw
                     st.session_state.dataFeedBin = dataSize
                     
@@ -193,8 +196,8 @@ def main():
                     
                     with placeholder:  # placeholder에 콘텐츠를 추가
                         st.markdown(
-                            '<p style="font-size: 18px; color: #8b8bfa; font-weight: bold;">' + selected_row['farm_nm'] + '&nbsp &nbsp ' + str(selected_row['date']) + '</p> '
-                            + '<p style="font-size: 18px; color: #fb7b7b; font-weight: bold;">' + '사료양 &nbsp ' + str(selected_row['stock_ratio'])
+                            '<p style="font-size: 15px; color: #a0a0ea; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 1px 0;">' + selected_row['farm_nm'] + '&nbsp &nbsp ' + str(selected_row['date']) + '</p> '
+                            + '<p style="font-size: 15px; color: #eba0a0; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 1px 0">' + '사료양 &nbsp ' + str(selected_row['stock_ratio'])
                             + ' (%) &nbsp &nbsp' +  str(selected_row['stock_amt']) + ' (ton)</p>', 
                             unsafe_allow_html=True
                         )
@@ -207,7 +210,6 @@ def main():
                     st.subheader("⏳ 측정 데이터")                
                     step4_data.Show3DFeedBin(st.session_state.dataRaw, st.session_state.dataFeedBin)
  
-
         # 사료통 없는 사료 정보를 확대해서 보여주는 요소
         elif choice == "측정 데이터(원본)":
              
