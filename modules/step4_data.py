@@ -85,7 +85,7 @@ def Show3DFeedBin(dataRaw, dataSize):
     z = dataModified[:,2]
     XYdrawRange = [20, 80]  ## 잘보이는 값을 수동으로 찾음 24.12.24
     ZdrawRange = [0, FeedBinSizeH[3]]
-    figureHeight = 600 
+    figureHeight = 800 
     
     display.Draw3DLayout(fig, "3D Mesh with Gridlines", XYdrawRange, ZdrawRange, figureHeight)  #관심영역 확대하여 출력
     
@@ -109,7 +109,7 @@ def Show3DFeed(dataRaw, dataSize):
     MinZ = int(min(z))
     ZdrawRange = [1.5*MinZ - 0.5 * MaxZ, 1.5 * MaxZ - 0.5 * MinZ]
     XYdrawRange = None
-    figureHeight = 600 #1000px
+    figureHeight = 800 #1000px
 
     display.Draw3DLayout(fig, "3D Mesh with Gridlines", XYdrawRange, ZdrawRange, figureHeight)  #관심영역 확대하여 출력
     fig = step3_func.Draw3DFeedAll(fig,dataModified,dataSize)
