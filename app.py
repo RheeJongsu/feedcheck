@@ -127,7 +127,7 @@ def main():
             # 30days Infomation
             if(st.session_state.IsLoad == False):           
                 today = datetime.datetime.now()
-                date_star = today - datetime.timedelta(days=30) # 1개월전
+                date_star = today - datetime.timedelta(days=40) # 1개월전
                 date_end = today
                 st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, str(date_star), str(date_end))
                 st.session_state.IsLoad = True
@@ -138,7 +138,7 @@ def main():
             # Left Side
             #with article1:
             with row1[0]:
-                st.subheader("📊 피드빈 측정 리스트")                
+                st.markdown("📊 피드빈 측정 리스트")                
                 # Data Table
                 event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['date','stock_ratio','desc','std_volume','std_amt']],
                             column_config={
@@ -166,19 +166,19 @@ def main():
                  
                 
                 # HTML/CSS 스타일이 적용된 구분선 추가
-                st.markdown("<hr style='border:1px solid #76a; margin:1px 0; padding: 0;'>", unsafe_allow_html=True)
+                # st.markdown("<hr style='border:1px solid #76a; margin:1px 0; padding: 0;'>", unsafe_allow_html=True)
                 
                 # 상단 행 (초기 공백 생성)
                 placeholder = st.empty()
                 with placeholder:  # placeholder에 콘텐츠를 추가
                    st.markdown(
                         '<p style="font-size: 15px; color: #ababab; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 1px 0;">농장명  &nbsp &nbsp  측정일시 </p> '
-                        + '<p style="font-size: 15px; color: #ababab; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 1px 0;">사료 재고율(%) &nbsp &nbsp  재고량 (ton)</p>', 
+                        + '<p style="font-size: 15px; color: #ababab; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 5px 0;">사료 재고율(%) &nbsp &nbsp  재고량 (ton)</p>', 
                         unsafe_allow_html=True
                     )
                 
                 # HTML/CSS 스타일이 적용된 구분선 추가
-                st.markdown("<hr style='border:1px solid #a26; margin:1px 0; padding: 0;'>", unsafe_allow_html=True)
+                st.markdown("<hr style='border:1px solid #a26; margin:1px 0; padding: 0;'> <br>", unsafe_allow_html=True)
 
                 # Select Data
                 if len(event.selection['rows']):
@@ -193,11 +193,11 @@ def main():
                     # 체크된 행의 정보를 한줄로 보여줌.
                     selected_index = int(event.selection['rows'][0])
                     selected_row = st.session_state.mysqlDepthDataAll.loc[selected_index]
-                    
+                     
                     with placeholder:  # placeholder에 콘텐츠를 추가
                         st.markdown(
                             '<p style="font-size: 15px; color: #a0a0ea; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 1px 0;">' + selected_row['farm_nm'] + '&nbsp &nbsp ' + str(selected_row['date']) + '</p> '
-                            + '<p style="font-size: 15px; color: #eba0a0; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 1px 0">' + '사료양 &nbsp ' + str(selected_row['stock_ratio'])
+                            + '<p style="font-size: 15px; color: #eba0a0; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 5px 0">' + '사료양 &nbsp ' + str(selected_row['stock_ratio'])
                             + ' (%) &nbsp &nbsp' +  str(selected_row['stock_amt']) + ' (ton)</p>', 
                             unsafe_allow_html=True
                         )
@@ -206,8 +206,8 @@ def main():
             #with article2:
             with row2[0]:
                  
-                if(st.session_state.dataRaw is not None):                    
-                    st.subheader("⏳ 측정 데이터")                
+                if(st.session_state.dataRaw is not None):   
+                    st.markdown("⏳ 측정 데이터")                
                     step4_data.Show3DFeedBin(st.session_state.dataRaw, st.session_state.dataFeedBin)
  
         # 사료통 없는 사료 정보를 확대해서 보여주는 요소
@@ -217,9 +217,8 @@ def main():
             row2 = st.columns(1)  # 두 번째 행
   
             # Left Side
-            with row1[0]:
-                st.subheader("📊 피드빈 측정 리스트")
-                
+            with row1[0]: 
+                st.markdown("📊 피드빈 측정 리스트")                
                 ## Title
                 # st.title("CONSTANTEC FEED CHECK \n 3D LiDAR 측정 시스템 (3D Bin Manager 1.0)") 
                 # st.markdown("*측정 데이터 조회 선택")
@@ -266,11 +265,11 @@ def main():
                     
             # Right Side
             with row2[0]:
-                if st.session_state.dataRaw is not None:
-                    st.subheader("⏳ 측정 데이터")                
+                if st.session_state.dataRaw is not None: 
+                    st.markdown("⏳ 측정 데이터")      
                     dataRaw = st.session_state.dataRaw
                     step4_data.Show3DRawData(dataRaw)
-                    print("Select Row", st.session_state.dataIndex)
+                    #print("Select Row", st.session_state.dataIndex)
         
         
         
