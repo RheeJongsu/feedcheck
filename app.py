@@ -87,7 +87,7 @@ def main():
             st.session_state.IsLoad = False
             st.rerun()
             
-        choice = st.sidebar.radio(" ", ["측정 데이터","측정 데이터(원본)", "기타"])
+        choice = st.sidebar.radio(" ", ["측정 데이터","측정 데이터(Raw)", "기타"])
         
         st.sidebar.text(" ") 
         st.sidebar.text(" ") 
@@ -215,7 +215,7 @@ def main():
                     step4_data.Show3DFeedBin(st.session_state.dataRaw, st.session_state.dataFeedBin)
  
         # 사료통 없는 사료 정보를 확대해서 보여주는 요소
-        elif choice == "측정 데이터(원본)":
+        elif choice == "측정 데이터(Raw)":
              
             row1 = st.columns(1)  # 첫 번째 행
             row2 = st.columns(1)  # 두 번째 행
