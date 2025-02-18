@@ -251,6 +251,8 @@ def main():
                             "std_amt": st.column_config.Column(
                                 label="전체무게(ton)",
                             )},
+                        use_container_width=True,  # 전체 너비 확장
+                        height=250,  # 표의 높이 조절 (픽셀 단위)     
                         on_select='rerun',
                         selection_mode='single-row'
                         )
