@@ -111,7 +111,8 @@ def main():
         
         ## Login First Page
         if choice == "Login":
-            st.subheader("Mobile Login")
+            #st.subheader("Mobile Login")
+            st.markdown("<p style='color:rgb(156, 223, 231); background:rgb(19, 49, 59); font-size:28px; font-weight:bold;'>Smart Feedbin App Login</p>", unsafe_allow_html=True)
             username = st.text_input("Username", value="Constantec")
             password = st.text_input("Password", value="root", type="password")
             st.session_state.userName = username
@@ -138,7 +139,8 @@ def main():
             # Left Side
             #with article1:
             with row1[0]:
-                st.markdown("📊 피드빈 측정 리스트")                
+                #st.markdown("📊 피드빈 측정 리스트")                
+                st.markdown("<p style='color:rgb(156, 223, 231); background:rgb(19, 49, 59); font-size:18px; font-weight:bold; margin: 3px 0;'>📊 피드빈 측정 리스트</p>", unsafe_allow_html=True)
                 # Data Table
                 event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['date','stock_ratio','desc','std_volume','std_amt']],
                             column_config={
@@ -176,7 +178,8 @@ def main():
                         + '<p style="font-size: 15px; color: #ababab; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 5px 0;">사료 재고율(%) &nbsp &nbsp  재고량 (ton)</p>', 
                         unsafe_allow_html=True
                     )
-                
+                 
+
                 # HTML/CSS 스타일이 적용된 구분선 추가
                 st.markdown("<hr style='border:1px solid #a26; margin:1px 0; padding: 0;'> <br>", unsafe_allow_html=True)
 
@@ -193,11 +196,11 @@ def main():
                     # 체크된 행의 정보를 한줄로 보여줌.
                     selected_index = int(event.selection['rows'][0])
                     selected_row = st.session_state.mysqlDepthDataAll.loc[selected_index]
-                     
+                         
                     with placeholder:  # placeholder에 콘텐츠를 추가
                         st.markdown(
-                            '<p style="font-size: 15px; color: #a0a0ea; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 1px 0;">' + selected_row['farm_nm'] + '&nbsp &nbsp ' + str(selected_row['date']) + '</p> '
-                            + '<p style="font-size: 15px; color: #eba0a0; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 5px 0">' + '사료양 &nbsp ' + str(selected_row['stock_ratio'])
+                            '<p style="font-size: 15px; color: #a0a0ea; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 1px 0;"> 농장명 : ' + selected_row['farm_nm'] + '&nbsp &nbsp &nbsp 측정일시 : '  + str(selected_row['date']) + '</p> '
+                            + '<p style="font-size: 15px; color: #eba0a0; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 5px 0">' + '사료양 : &nbsp ' + str(selected_row['stock_ratio'])
                             + ' (%) &nbsp &nbsp' +  str(selected_row['stock_amt']) + ' (ton)</p>', 
                             unsafe_allow_html=True
                         )
@@ -207,7 +210,8 @@ def main():
             with row2[0]:
                  
                 if(st.session_state.dataRaw is not None):   
-                    st.markdown("⏳ 측정 데이터")                
+                    #st.markdown("⏳ 측정 데이터")                
+                    st.markdown("<p style='color:rgb(156, 223, 231); background:rgb(19, 49, 59); font-size:18px; font-weight:bold; margin: 1px 0;'>⏳ 측정 데이터</p>", unsafe_allow_html=True)
                     step4_data.Show3DFeedBin(st.session_state.dataRaw, st.session_state.dataFeedBin)
  
         # 사료통 없는 사료 정보를 확대해서 보여주는 요소
@@ -218,14 +222,16 @@ def main():
   
             # Left Side
             with row1[0]: 
-                st.markdown("📊 피드빈 측정 리스트")                
+                #st.markdown("📊 피드빈 측정 리스트")                
+                st.markdown("<p style='color:rgb(156, 223, 231); background:rgb(19, 49, 59); font-size:18px; font-weight:bold; margin: 3px 0;'>📊 피드빈 측정 리스트</p>", unsafe_allow_html=True)
+                
                 ## Title
                 # st.title("CONSTANTEC FEED CHECK \n 3D LiDAR 측정 시스템 (3D Bin Manager 1.0)") 
                 # st.markdown("*측정 데이터 조회 선택")
                 # 검색일 선택 (위와 동일한 형태로 중복성 방지 필요)
                 today = datetime.datetime.now()
                 one_month_ago = today - relativedelta(months=1)
-                d = st.date_input("측정일을 선택하세요.",
+                d = st.date_input(" ** 측정일을 선택하세요.",
                                 (one_month_ago,today),
                                 max_value=today,
                                 format="YYYY-MM-DD",
@@ -268,7 +274,8 @@ def main():
             # Right Side
             with row2[0]:
                 if st.session_state.dataRaw is not None: 
-                    st.markdown("⏳ 측정 데이터")      
+                    #st.markdown("⏳ 측정 데이터")                
+                    st.markdown("<p style='color:rgb(156, 223, 231); background:rgb(19, 49, 59); font-size:18px; font-weight:bold; margin: 1px 0;'>⏳ 측정 데이터</p>", unsafe_allow_html=True)                   
                     dataRaw = st.session_state.dataRaw
                     step4_data.Show3DRawData(dataRaw)
                     #print("Select Row", st.session_state.dataIndex)
