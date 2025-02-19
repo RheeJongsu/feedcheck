@@ -86,7 +86,8 @@ def main():
                 st.session_state.ConnDB.close()
             st.session_state.IsLoad = False
             st.rerun()
-            
+             
+        
         choice = st.sidebar.radio(" ", ["측정 데이터","측정 데이터(Raw)", "기타"])
         
         st.sidebar.text(" ") 
@@ -213,6 +214,7 @@ def main():
                     #st.markdown("⏳ 측정 데이터")                
                     st.markdown("<p style='color:rgb(156, 223, 231); background:rgb(19, 49, 59); font-size:18px; font-weight:bold; margin: 1px 0;'>⏳ 측정 데이터</p>", unsafe_allow_html=True)
                     step4_data.Show3DFeedBin(st.session_state.dataRaw, st.session_state.dataFeedBin)
+                    
  
         # 사료통 없는 사료 정보를 확대해서 보여주는 요소
         elif choice == "측정 데이터(Raw)":

@@ -227,7 +227,7 @@ def Draw3DLayout(fig, title, XYRange, ZRange, figureHeight = 1000):
                 ),
             ),
             height = figureHeight,
-            width = 1000
+            width = 800
         )
     else: 
         fig.update_layout(
@@ -267,7 +267,7 @@ def Draw3DLayout(fig, title, XYRange, ZRange, height = 600):
                 ),            
             ),
             height = height,
-            width = 600
+            width = 800
         )
     else:
          
@@ -288,7 +288,7 @@ def Draw3DLayout(fig, title, XYRange, ZRange, height = 600):
                 ),            
             ),
             height = height,
-            width = 600  
+            width = 800  
         )   
         
     return fig
