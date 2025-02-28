@@ -72,8 +72,8 @@ def Show3DFeedBin(dataRaw, dataSize):
     fig = go.Figure()
 
     ## Draw MeshGrid
-    fig = display.Draw3DMeshGrid(fig, dataModified) 
-     
+    fig = display.Draw3DMeshGrid(fig,dataModified)
+    
     ## Draw FeedBin
     FeedBinSizeR = [dataSize.bot2.iloc[0]/param.VOXEL_GAP/2, dataSize.mid2.iloc[0]/param.VOXEL_GAP/2,  dataSize.top2.iloc[0]/param.VOXEL_GAP/2,  dataSize.top1.iloc[0]/param.VOXEL_GAP/2]
     FeedBinSizeH = [0, dataSize.bot_H.iloc[0], dataSize.bot_H.iloc[0]+dataSize.mid_H.iloc[0], dataSize.bot_H.iloc[0]+dataSize.mid_H.iloc[0]+dataSize.top_H.iloc[0]]
@@ -84,12 +84,12 @@ def Show3DFeedBin(dataRaw, dataSize):
     ## Draw Option
     z = dataModified[:,2]
     XYdrawRange = [20, 80]  ## 잘보이는 값을 수동으로 찾음 24.12.24
-    ZdrawRange = [0, FeedBinSizeH[3]] 
-    figureHeight = 500  
-    
+    ZdrawRange = [0, FeedBinSizeH[3]]
+    figureHeight = 800
+
     display.Draw3DLayout(fig, "3D Mesh with Gridlines", XYdrawRange, ZdrawRange, figureHeight)  #관심영역 확대하여 출력
-     
-    st.plotly_chart(fig, use_container_width=True)     
+    
+    st.plotly_chart(fig, use_container_width=True)
     if(st.session_state.Debug):print("[Show3DFeedBin] 출력 데이터를 생성했습니다. 렌더링을 시작합니다")
     
 
@@ -117,9 +117,20 @@ def Show3DFeed(dataRaw, dataSize):
     st.plotly_chart(fig, use_container_width=True)
 
 def Show3DRawData(dataRaw):
+    Center = [0,0]
+    zRange = [0,10000]
+
+    Center[0] = st.session_state.dataCenterX #st.session_state.centerPos[0]
+    Center[1] = st.session_state.dataCenterY #st.session_state.centerPos[1]
+
+    print("New Center : ",Center)
+
+    zRange[0] = st.session_state.zRange[0]
+    zRange[1] = st.session_state.zRange[1]
     #Draw
     fig = go.Figure()
     fig = display.Display3DScatter(fig,dataRaw)
+    fig = display.DisplayCenter(fig, Center, zRange)
     fig.update_layout(
         height=800  # 높이를 1000px로 설정
     )

@@ -10,8 +10,18 @@ from modules import userParam as param
 st.set_page_config(page_title="SmartFeedBin", page_icon="🔔", layout="wide")
 # Layout
 empty1, Contents1, empty2 = st.columns([0.1,1,0.1])
-article1, article2, article3= st.columns(3)
+article1, article2= st.columns(2)
  
+
+# Constants
+DefaultDeltaDate = 50
+
+def initSearchingDate():
+    today = datetime.date.today()
+    date_start = today - datetime.timedelta(days=DefaultDeltaDate) # 1개월전
+    date_end = today
+    st.session_state.searchingDate[0] = date_start
+    st.session_state.searchingDate[1] = date_end
 
 def login():
     with st.spinner("Check up user..."):
@@ -32,6 +42,7 @@ def login():
         st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBin(st.session_state.ConnDB)
         st.success("Loading Feedbin Data......")
         st.session_state.MessageShow = None
+        initSearchingDate()
     
 def main():
     ## Grobal Variable
@@ -61,16 +72,49 @@ def main():
         st.session_state.Option = None
     if 'IsLoad' not in st.session_state:
         st.session_state.IsLoad = False
+    if 'searchingDate' not in st.session_state:
+        st.session_state.searchingDate = [' ']*2
+    if 'searchingDateNew' not in st.session_state:
+        st.session_state.searchingDateNew = [' ']*2
+    if 'centerPos' not in st.session_state:
+        st.session_state.centerPos = [0,0]
+    if 'zRange' not in st.session_state:
+        st.session_state.zRange = [0,10000]
 
     st.session_state.Debug = True
 
     ## Event Callback
     def updateSearchingDate():
-        if(len(st.session_state.searchingDate) == 2):
-            date_start = st.session_state.searchingDate[0]
-            date_end = st.session_state.searchingDate[1]
-            st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, str(date_start), str(date_end))
+        if 'searchingDateNew' not in st.session_state:
+            return
+        if 'searchingDate' not in st.session_state:
+            return
+        print(len(st.session_state.searchingDateNew))
+
+        
+        if(len(st.session_state.searchingDateNew) == 2):
+            if(st.session_state.searchingDateNew[0] == ' ') : return
+            if(st.session_state.searchingDateNew[1] == ' ') : return
+            if(st.session_state.searchingDateNew[1] < st.session_state.searchingDateNew[0]):
+                dateTemp = st.session_state.searchingDateNew[0]
+                st.session_state.searchingDateNew[0] = st.session_state.searchingDateNew[1]
+                st.session_state.searchingDateNew[1] = dateTemp
+
+            if((st.session_state.searchingDateNew[0] == st.session_state.searchingDate[0]) and (st.session_state.searchingDateNew[1] == st.session_state.searchingDate[1])):
+                return
+            else :
+                print(st.session_state.searchingDateNew)
+                print(st.session_state.searchingDate)
+                st.session_state.searchingDate[0] = st.session_state.searchingDateNew[0]
+                st.session_state.searchingDate[1] = st.session_state.searchingDateNew[1]
+                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1])
+                st.session_state.IsLoad = True
     
+    def updateCenterPos():
+        st.session_state.centerPos[0] = st.session_state.dataCenterX
+        st.session_state.centerPos[1] = st.session_state.dataCenterY
+        print(st.session_state.centerPos)
+
     ## Side Bar
     st.sidebar.title("CONSTANTEC FEED CHECK \n 3D LiDAR 측정 시스템")
     st.sidebar.text(" ") 
@@ -86,15 +130,16 @@ def main():
                 st.session_state.ConnDB.close()
             st.session_state.IsLoad = False
             st.rerun()
-             
-        
-        choice = st.sidebar.radio(" ", ["측정 데이터","측정 데이터(Raw)", "기타"])
+            
+        choice = st.sidebar.radio(" ", ["측정 데이터","측정 데이터(수직)","측정 데이터(무보정)", "기타"])
         
         st.sidebar.text(" ") 
         st.sidebar.text(" ") 
         
         if st.sidebar.button("조회"):
+            initSearchingDate()
             st.session_state.ConnDB = step3_func.MYSQL_Connect()
+            st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1])
             st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBin(st.session_state.ConnDB)
             st.cache_data.clear()
             st.cache_resource.clear()
@@ -112,8 +157,7 @@ def main():
         
         ## Login First Page
         if choice == "Login":
-            #st.subheader("Mobile Login")
-            st.markdown("<p style='color:rgb(156, 223, 231); background:rgb(19, 49, 59); font-size:28px; font-weight:bold;'>Smart Feedbin App Login</p>", unsafe_allow_html=True)
+            st.subheader("Login")
             username = st.text_input("Username", value="Constantec")
             password = st.text_input("Password", value="root", type="password")
             st.session_state.userName = username
@@ -121,15 +165,11 @@ def main():
                 st.rerun()
 
         ## 최근 정보를 열람        
-        elif choice == "측정 데이터":      
-            
-            row1 = st.columns(1)  # 첫 번째 행
-            row2 = st.columns(1)  # 두 번째 행
- 
-            # 30days Infomation
+        elif choice == "측정 데이터":
+            # 7days Infomation
             if(st.session_state.IsLoad == False):           
                 today = datetime.datetime.now()
-                date_star = today - datetime.timedelta(days=40) # 1개월전
+                date_star = today - datetime.timedelta(days=60) # 1개월전
                 date_end = today
                 st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, str(date_star), str(date_end))
                 st.session_state.IsLoad = True
@@ -138,149 +178,166 @@ def main():
             # Display Info
             
             # Left Side
-            #with article1:
-            with row1[0]:
-                #st.markdown("📊 피드빈 측정 리스트")                
-                st.markdown("<p style='color:rgb(156, 223, 231); background:rgb(19, 49, 59); font-size:18px; font-weight:bold; margin: 3px 0;'>📊 피드빈 측정 리스트</p>", unsafe_allow_html=True)
-                # Data Table
-                event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['date','stock_ratio','desc','std_volume','std_amt']],
-                            column_config={
-                                "date": st.column_config.Column(
-                                    label="측정일자",
-                                ),
-                                 "stock_ratio": st.column_config.Column(
-                                    label="재고율(%)",
-                                ),
-                                "desc": st.column_config.Column(
-                                    label="비고",
-                                    width=200
-                                ),
-                                "std_volume": st.column_config.Column(
-                                    label="전체규격(㎥)",
-                                ),                               
-                                "std_amt": st.column_config.Column(
-                                    label="전체무게(ton)",
-                                )},
-                            use_container_width=True,  # 전체 너비 확장
-                            height=250,  # 표의 높이 조절 (픽셀 단위)                            
-                            on_select='rerun',
-                            selection_mode='single-row'
-                            )
-                 
-                
-                # HTML/CSS 스타일이 적용된 구분선 추가
-                # st.markdown("<hr style='border:1px solid #76a; margin:1px 0; padding: 0;'>", unsafe_allow_html=True)
-                
+            with article1:
                 # 상단 행 (초기 공백 생성)
                 placeholder = st.empty()
                 with placeholder:  # placeholder에 콘텐츠를 추가
                    st.markdown(
-                        '<p style="font-size: 15px; color: #ababab; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 1px 0;">농장명  &nbsp &nbsp  측정일시 </p> '
-                        + '<p style="font-size: 15px; color: #ababab; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 5px 0;">사료 재고율(%) &nbsp &nbsp  재고량 (ton)</p>', 
+                        '<p style="font-size: 28px; color: #ababab; font-weight: bold;">농장명 : <p> '
+                        + '<p style="font-size: 28px; color: #ababab; font-weight: bold;">측정일시 : <p> '
+                        + '<p style="font-size: 28px; color: #ababab; font-weight: bold;">사료양 : 재고율(%) &nbsp &nbsp  재고량 (ton)</p>', 
                         unsafe_allow_html=True
                     )
-                 
 
-                # HTML/CSS 스타일이 적용된 구분선 추가
-                st.markdown("<hr style='border:1px solid #a26; margin:1px 0; padding: 0;'> <br>", unsafe_allow_html=True)
-
+                # Data Table
+                event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['fistdt','lastdt','stock_ratio','stock_amt', 'desc']],
+                            column_config={
+                                "fistdt": st.column_config.Column(
+                                    label="측정일자",
+                                ),
+                                "lastdt": st.column_config.Column(
+                                    label="측정시간",
+                                ),
+                                "stock_ratio": st.column_config.NumberColumn(
+                                    label="재고율",  
+                                    format="%.0f%%"  # 백분율(%) 변환 
+                                ),
+                                "stock_amt": st.column_config.Column(
+                                    label="재고량",
+                                ), 
+                                "desc": st.column_config.Column(
+                                    label="비고",
+                                    width=200
+                                )},
+                            on_select='rerun',
+                            selection_mode='single-row'
+                            )
                 # Select Data
                 if len(event.selection['rows']):
                     st.session_state.dataIndex = int(event.selection['rows'][0])
                     dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)  # 거리 데이터 추출
                     # 사료통 크기 정보를 이용한 선택(동일 용량이 있는 경우 변경해야함) 
                     dataSize = step3_func.SelectSizeFeedBinFromSQL(st.session_state.mysqlFeedBinDataAll, st.session_state.mysqlDepthDataAll.std_volume[st.session_state.dataIndex])
-                    
+                      
                     st.session_state.dataRaw = dataRaw
                     st.session_state.dataFeedBin = dataSize
                     
                     # 체크된 행의 정보를 한줄로 보여줌.
                     selected_index = int(event.selection['rows'][0])
                     selected_row = st.session_state.mysqlDepthDataAll.loc[selected_index]
-                         
+                    
                     with placeholder:  # placeholder에 콘텐츠를 추가
                         st.markdown(
-                            '<p style="font-size: 15px; color: #a0a0ea; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 1px 0;"> 농장명 : ' + selected_row['farm_nm'] + '&nbsp &nbsp &nbsp 측정일시 : '  + str(selected_row['date']) + '</p> '
-                            + '<p style="font-size: 15px; color: #eba0a0; font-weight: bold; background: linear-gradient(to right, #1C3F10, #2B631A); padding: 1px; border-radius: 3px; text-align: left; margin: 5px 0">' + '사료양 : &nbsp ' + str(selected_row['stock_ratio'])
-                            + ' (%) &nbsp &nbsp' +  str(selected_row['stock_amt']) + ' (ton)</p>', 
+                            '<p style="font-size: 28px; color: #8b8bfa; font-weight: bold;">' + '농장명 : &nbsp ' +  selected_row['farm_nm'] + '&nbsp</p> '
+                            + '<p style="font-size: 28px; color: #8b8bfa; font-weight: bold;">' + '측정일시 : &nbsp ' +  str(selected_row['fistdt']) + '&nbsp ' + str(selected_row['lastdt']) + '</p> '
+                            + '<p style="font-size: 28px; color: #fb7b7b; font-weight: bold;">' + '사료양 : &nbsp ' + str(round(selected_row['stock_ratio']))
+                            + '% &nbsp &nbsp' +  str(selected_row['stock_amt']) + ' </p>', 
                             unsafe_allow_html=True
                         )
- 
+
             # Right Side
-            #with article2:
-            with row2[0]:
-                 
-                if(st.session_state.dataRaw is not None):   
-                    #st.markdown("⏳ 측정 데이터")                
-                    st.markdown("<p style='color:rgb(156, 223, 231); background:rgb(19, 49, 59); font-size:18px; font-weight:bold; margin: 1px 0;'>⏳ 측정 데이터</p>", unsafe_allow_html=True)
+            with article2:
+                if(st.session_state.dataRaw is not None):
                     step4_data.Show3DFeedBin(st.session_state.dataRaw, st.session_state.dataFeedBin)
-                    
- 
+
+        
+        ## 특정 일의 데이터를 열람
+        elif choice == "측정 데이터(수직)":
+            # 검색일 선택
+            st.date_input("측정일을 선택하세요.",
+                        value=st.session_state.searchingDate,
+                        max_value=datetime.date.today(),
+                        format="YYYY-MM-DD",
+                        key="searchingDateNew",
+                        on_change=updateSearchingDate)
+            
+            # Data Table (위와 동일한 형태로 중복성 방지 필요)
+            event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['fistdt','lastdt','stock_ratio','stock_amt','desc']],
+                        column_config={
+                            "fistdt": st.column_config.Column(
+                                label="측정일자",
+                            ),
+                            "lastdt": st.column_config.Column(
+                                label="측정시간",
+                            ),
+                            "stock_ratio": st.column_config.NumberColumn(
+                                label="재고율",  
+                                format="%.0f%%"  # 백분율(%) 변환 
+                            ),
+                            "stock_amt": st.column_config.Column(
+                                label="재고량",
+                            ), 
+                            "desc": st.column_config.Column(
+                                label="비고",
+                                width=200
+                            )},
+                        on_select='rerun',
+                        selection_mode='single-row'
+                        )
+            # Select Data (위와 동일한 형태로 중복성 방지 필요)
+            if len(event.selection['rows']):
+                st.session_state.dataIndex = int(event.selection['rows'][0])
+                if(st.button("[Show] {}".format(st.session_state.mysqlDepthDataAll.loc[st.session_state.dataIndex,['date']].iloc[0]))):
+                    dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)  # 거리 데이터 추출
+                    # 사료통 크기 정보를 이용한 선택(동일 용량이 있는 경우 변경해야함)
+                    dataSize = step3_func.SelectSizeFeedBinFromSQL(st.session_state.mysqlFeedBinDataAll, st.session_state.mysqlDepthDataAll.std_volume[st.session_state.dataIndex])
+                    selected_feedbin = st.session_state.mysqlFeedBinDataAll[st.session_state.mysqlFeedBinDataAll['FeedBinSerialNo'] == dataSize.FeedBinSerialNo.iloc[0]]
+                    st.dataframe(selected_feedbin)
+                    if(dataRaw is not None):
+                        step4_data.Show3DFeedBin(dataRaw, dataSize)
+                        print("Select Row",st.session_state.dataIndex)
+
         # 사료통 없는 사료 정보를 확대해서 보여주는 요소
-        elif choice == "측정 데이터(Raw)":
-             
-            row1 = st.columns(1)  # 첫 번째 행
-            row2 = st.columns(1)  # 두 번째 행
-  
+        elif choice == "측정 데이터(무보정)":
             # Left Side
-            with row1[0]: 
-                #st.markdown("📊 피드빈 측정 리스트")                
-                st.markdown("<p style='color:rgb(156, 223, 231); background:rgb(19, 49, 59); font-size:18px; font-weight:bold; margin: 3px 0;'>📊 피드빈 측정 리스트</p>", unsafe_allow_html=True)
-                
+            with article1:
                 ## Title
                 # st.title("CONSTANTEC FEED CHECK \n 3D LiDAR 측정 시스템 (3D Bin Manager 1.0)") 
                 # st.markdown("*측정 데이터 조회 선택")
                 # 검색일 선택 (위와 동일한 형태로 중복성 방지 필요)
-                today = datetime.datetime.now()
-                one_month_ago = today - relativedelta(months=1)
-                d = st.date_input(" ** 측정일을 선택하세요.",
-                                (one_month_ago,today),
-                                max_value=today,
-                                format="YYYY-MM-DD",
-                                key='searchingDate',
-                                on_change=updateSearchingDate)
-                  
+                st.date_input("측정일을 선택하세요.",
+                        value=st.session_state.searchingDate,
+                        max_value=datetime.date.today(),
+                        format="YYYY-MM-DD",
+                        key="searchingDateNew",
+                        on_change=updateSearchingDate)
+
                 # Data Table (위와 동일한 형태로 중복성 방지 필요)
-                event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['date','stock_ratio','desc','std_volume','std_amt']],
+                event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['fistdt','lastdt','stock_ratio','stock_amt','desc']],
                         column_config={
-                            "date": st.column_config.Column(
-                                label="측정일자",
+                            "fistdt": st.column_config.Column(
+                               label="측정일자",
                             ),
-                              "stock_ratio": st.column_config.Column(
-                                label="재고율(%)",
+                            "lastdt": st.column_config.Column(
+                                label="측정시간",
                             ),
+                            "stock_ratio": st.column_config.NumberColumn(
+                                label="재고율",  
+                                format="%.0f%%"  # 백분율(%) 변환 
+                            ),
+                            "stock_amt": st.column_config.Column(
+                                label="재고량",
+                            ), 
                             "desc": st.column_config.Column(
                                 label="비고",
-                                width=200 
-                            ),
-                            "std_volume": st.column_config.Column(
-                                label="전체규격(㎥)",
-                            ),
-                            "std_amt": st.column_config.Column(
-                                label="전체무게(ton)",
+                                width=200
                             )},
-                        use_container_width=True,  # 전체 너비 확장
-                        height=250,  # 표의 높이 조절 (픽셀 단위)     
                         on_select='rerun',
                         selection_mode='single-row'
                         )
-             
-                # 선택한 행의 정보를 추출
-                selected_index = None  # 초기화 추가
-                # Select Data (유사하나 출력 방식이 다름)                 
+                # Select Data (유사하나 출력 방식이 다름)
+                articleL, articleR = st.columns([1,1])
+                with articleL:
+                    st.number_input("x 중심", key="dataCenterX", on_change=updateCenterPos, value=float(st.session_state.centerPos[0]))
+                with articleR:
+                    st.number_input("Y 중심", key="dataCenterY", on_change=updateCenterPos, value=float(st.session_state.centerPos[1]))
+            
                 if len(event.selection['rows']):
                     st.session_state.dataIndex = int(event.selection['rows'][0])
-                    dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)  # 거리 데이터 추출 
-                    st.session_state.dataRaw = dataRaw
-                    
-            # Right Side
-            with row2[0]:
-                if st.session_state.dataRaw is not None: 
-                    #st.markdown("⏳ 측정 데이터")                
-                    st.markdown("<p style='color:rgb(156, 223, 231); background:rgb(19, 49, 59); font-size:18px; font-weight:bold; margin: 1px 0;'>⏳ 측정 데이터</p>", unsafe_allow_html=True)                   
-                    dataRaw = st.session_state.dataRaw
-                    step4_data.Show3DRawData(dataRaw)
-                    #print("Select Row", st.session_state.dataIndex)
+                    if(st.button("[Show] {}".format(st.session_state.mysqlDepthDataAll.loc[st.session_state.dataIndex,['date']].iloc[0]))):
+                        dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)   # 거리 데이터 추출
+                        step4_data.Show3DRawData(dataRaw)
+                        print("Select Row", st.session_state.dataIndex)
         
         
         
@@ -322,9 +379,6 @@ def main():
                 st.rerun()
     with empty2:
         st.empty()
-
-    #Debug용
-    #print("Done", step3_func.DISPLAY_MESH_COLORMAP)
 
 if __name__ == "__main__":
     main()

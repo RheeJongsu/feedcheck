@@ -1,7 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
-import ctypes as cty
 import math
 from modules import userParam as param
 
@@ -31,6 +30,22 @@ def Display3DScatter(fig, df, pointSize=5, colormap='jet', scatterOpcity=1):
     )
     return fig
 
+## 중심 점 그리기
+def DisplayCenter(fig, Center, zRange):
+    x_curve = [Center[0], Center[0]]
+    y_curve = [Center[1], Center[1]]
+    z_curve = [zRange[0], zRange[1]]
+        
+    fig.add_trace(go.Scatter3d(
+        x=x_curve,
+        y=y_curve,
+        z=z_curve,
+        mode='lines',
+        line=dict(color=param.DISPLAY_WALL_COLOR, width=param.DISPLAY_WALL_WIDTH),
+        showlegend=False
+    ))
+    return fig
+
 ## Feed 
 def Draw3DMeshGrid(fig, df):
     ## Analysis Data
@@ -43,7 +58,6 @@ def Draw3DMeshGrid(fig, df):
         y=y,
         z=z,
         #colorbar_title='Color Scale',              # 컬러바 제목
-        showscale=False,                            # 컬러바 제거
         intensity=z,                                # 색상을 결정하는 값 (intensity)
         colorscale=param.DISPLAY_MESH_COLORMAP,     # jet 컬러맵 적용
         opacity=param.DISPLAY_MESH_ALPHA/100        # 투명도
@@ -212,9 +226,8 @@ def Draw3DFeedBinBoundDown(fig, dataBound, FeedBinSizeR, FeedBinSizeH):
         ))
     return fig
 
-# Graph Option1
+# Graph Option
 def Draw3DLayout(fig, title, XYRange, ZRange, figureHeight = 1000):
-     
     if(XYRange is None):
         fig.update_layout(
             title=title,
@@ -226,10 +239,9 @@ def Draw3DLayout(fig, title, XYRange, ZRange, figureHeight = 1000):
                     range=ZRange
                 ),
             ),
-            height = figureHeight,
-            width = 800
+            height = figureHeight
         )
-    else: 
+    else:
         fig.update_layout(
             title=title,
             scene=dict(
@@ -246,16 +258,13 @@ def Draw3DLayout(fig, title, XYRange, ZRange, figureHeight = 1000):
                     range=ZRange
                 ),
             ),
-            height = figureHeight,
-            width = 800
+            height = figureHeight
         )
     return fig
 
-# Graph Option2
-def Draw3DLayout(fig, title, XYRange, ZRange, height = 600):
-     
+# Graph Option
+def Draw3DLayout(fig, title, XYRange, ZRange, height = 1000):
     if(XYRange is None):
-         
         fig.update_layout(            
             title=title,            
             scene=dict(                
@@ -266,11 +275,9 @@ def Draw3DLayout(fig, title, XYRange, ZRange, height = 600):
                     range=ZRange                
                 ),            
             ),
-            height = height,
-            width = 800
+            height = height
         )
     else:
-         
         fig.update_layout(            
             title=title,            
             scene=dict(                
@@ -287,34 +294,32 @@ def Draw3DLayout(fig, title, XYRange, ZRange, height = 600):
                     range=ZRange                
                 ),            
             ),
-            height = height,
-            width = 800  
-        )   
-        
+            height = height   
+        )        
     return fig
 
 
 def Draw3DFeedBinAll(fig, dataModified, dataBound, dataSize, VoxelSize, VoxelGap):        
     ## Draw MeshGrid
-    meshColorMap = DISPLAY_MESH_COLORMAP   # Mesh의 면 색 (jet, bgr, turbo, rainbow, gist_rainbow, terrain)
-    meshOpacity = DISPLAY_MESH_ALPHA/100   # Mesh의 면 투명도
-    gridColor = DISPLAY_GRID_COLOR         # Grid의 선에 대한 색
-    gridOpacity = DISPLAY_GRID_ALPHA/100   # Grid의 선의 투명도
+    meshColorMap = param.DISPLAY_MESH_COLORMAP   # Mesh의 면 색 (jet, bgr, turbo, rainbow, gist_rainbow, terrain)
+    meshOpacity = param.DISPLAY_MESH_ALPHA/100   # Mesh의 면 투명도
+    gridColor = param.DISPLAY_GRID_COLOR         # Grid의 선에 대한 색
+    gridOpacity = param.DISPLAY_GRID_ALPHA/100   # Grid의 선의 투명도
     fig = Draw3DMeshGrid(fig,dataModified,meshColorMap,meshOpacity,gridColor,gridOpacity)
 
     ## Draw FeedBin
     FeedBinSizeR = [dataSize.bot2.iloc[0]/VoxelGap[0]/2, dataSize.mid2.iloc[0]/VoxelGap[0]/2,  dataSize.top2.iloc[0]/VoxelGap[0]/2,  dataSize.top1.iloc[0]/VoxelGap[0]/2]
     FeedBinSizeH = [0, dataSize.bot_H.iloc[0], dataSize.bot_H.iloc[0]+dataSize.mid_H.iloc[0], dataSize.bot_H.iloc[0]+dataSize.mid_H.iloc[0]+dataSize.top_H.iloc[0]] #Height
-    FeedBinWallColor = DISPLAY_WALL_COLOR # Wall Color
-    FeedBinWallOpacity = DISPLAY_WALL_ALPHA/100     # Wall Opacity
-    FeedBinWallDencity = DISPLAY_WALL_DENSITY        # Wall Dencity 10% - 200%
+    FeedBinWallColor = param.DISPLAY_WALL_COLOR # Wall Color
+    FeedBinWallOpacity = param.DISPLAY_WALL_ALPHA/100     # Wall Opacity
+    FeedBinWallDencity = param.DISPLAY_WALL_DENSITY        # Wall Dencity 10% - 200%
     FeedBinWallLineWidth = 10
     FeedBinTopWallLineWidth = 1
-    FeedBinFeedDencity = DISPLAY_FEED_DENSITY        # Wall Dencity 10% - 200%
+    FeedBinFeedDencity = param.DISPLAY_FEED_DENSITY        # Wall Dencity 10% - 200%
     mode = 0                        #0: Full Wall, 1: Half wall, 2: None
     fig = Draw3DFeedBin(fig, FeedBinSizeR, FeedBinSizeH, FeedBinWallColor, FeedBinWallOpacity, VoxelSize, FeedBinWallLineWidth)
     fig = Draw3DFeedBinBoundUp(fig, dataBound, FeedBinSizeR, FeedBinSizeH, FeedBinWallColor, FeedBinWallOpacity, FeedBinWallDencity, VoxelSize, FeedBinTopWallLineWidth, mode)
-    FeedBinWallColor = DISPLAY_FEED_COLOR
+    FeedBinWallColor = param.DISPLAY_FEED_COLOR
     fig = Draw3DFeedBinBoundDown(fig, dataBound, FeedBinSizeR, FeedBinSizeH, FeedBinWallColor, FeedBinWallOpacity, FeedBinFeedDencity, VoxelSize, FeedBinWallLineWidth, mode)
     ## Draw Option
     z = dataModified[:,2]
@@ -325,10 +330,10 @@ def Draw3DFeedBinAll(fig, dataModified, dataBound, dataSize, VoxelSize, VoxelGap
 
 def Draw3DFeedAll(fig, dataModified):        
     ## Draw MeshGrid
-    meshColorMap = DISPLAY_MESH_COLORMAP   # Mesh의 면 색 (jet, bgr, turbo, rainbow, gist_rainbow, terrain)
-    meshOpacity = DISPLAY_MESH_ALPHA/100   # Mesh의 면 투명도
-    gridColor = DISPLAY_GRID_COLOR         # Grid의 선에 대한 색
-    gridOpacity = DISPLAY_GRID_ALPHA/100   # Grid의 선의 투명도
+    meshColorMap = param.DISPLAY_MESH_COLORMAP   # Mesh의 면 색 (jet, bgr, turbo, rainbow, gist_rainbow, terrain)
+    meshOpacity = param.DISPLAY_MESH_ALPHA/100   # Mesh의 면 투명도
+    gridColor = param.DISPLAY_GRID_COLOR         # Grid의 선에 대한 색
+    gridOpacity = param.DISPLAY_GRID_ALPHA/100   # Grid의 선의 투명도
     fig = Draw3DMeshGrid(fig,dataModified,meshColorMap,meshOpacity,gridColor,gridOpacity)
 
     ## Draw Option

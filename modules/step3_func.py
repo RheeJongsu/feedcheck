@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 import numpy as np
 from io import StringIO
@@ -24,21 +24,23 @@ def MYSQL_Connect():
 
 def MysqlGetDepthDataShow(MYSQLconnect, date_start, date_end):
     sql_state = "select T1.chk_date, T1.std_volume, T1.std_amt, T1.stock_ratio, T1.desc" \
-                "from tb_change_data T1 where T1.chg_x !='' and T1.create_time between '" + date_start + "' and '" + date_end + "';"
-    return pd.read_sql_query(sql_state, MYSQLconnect)
+                "from tb_change_data T1 where T1.chg_x !='' and T1.create_time between '" + str(date_start) + "' and '" + str(date_end) + "';"
+    return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
 def MysqlGetDepthDataold(MYSQLconnect, date_start, date_end):
     sql_state = "select T1.chk_date as date, T1.chg_volume as rawData, T1.chg_x as x, T1.chg_y as y, T1.chg_z as z, T1.std_volume, T1.std_amt, T1.stock_ratio, T1.desc " \
-                "from tb_change_data T1 where T1.chg_x !='' and T1.chk_date between '" + date_start + "' and '" + date_end + "' order by T1.chk_date desc;"
-    return pd.read_sql_query(sql_state, MYSQLconnect)
+                "from tb_change_data T1 where T1.chg_x !='' and T1.chk_date between '" + str(date_start) + "' and '" + str(date_end) + "' order by T1.chk_date desc;"
+    return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
 def MysqlGetDepthData(MYSQLconnect, date_start, date_end):
-    sql_state = "select T1.chk_date as date, T1.chg_volume as rawData, T1.chg_x as x, T1.chg_y as y, T1.chg_z as z, T1.std_volume, " \
-                " T1.std_amt, T1.stock_ratio, T1.stock_amt, T1.desc, T2.farm_nm, T3.bin_nm " \
+    sql_state = "select T1.chk_date as date, LEFT(T1.chk_date, 10) as fistdt,  SUBSTR(T1.chk_date, 12, 5) as lastdt, " \
+                " T1.chg_volume as rawData, T1.chg_x as x, T1.chg_y as y, T1.chg_z as z, T1.std_volume, " \
+                " T1.std_amt, T1.stock_ratio, LPAD(CONCAT(FORMAT(ROUND(T1.stock_amt * 1000), 0), 'Kg'), 10, ' ') as stock_amt, " \
+                " T1.desc, T2.farm_nm, T3.bin_nm, T1.center_x, T1.center_y " \
                 " from tb_change_data T1, tb_farm T2, tb_feedbin T3 " \
-                " where  T1.chg_x !='' and T1.chk_date between '" + date_start + "' and '" + date_end + "' " \
-                " and T1.bin_seq = T3.bin_seq	AND T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;"
-    return pd.read_sql_query(sql_state, MYSQLconnect)
+                " where  T1.chg_x !='' and T1.chk_date between '" + str(date_start) + "' and '" + str(date_end) + "' " \
+                " and T1.bin_seq = T3.bin_seq and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;"
+    return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
 def MysqlGetSizeFeedBin(MYSQLconnect):
     sql_state = "SELECT bin_serial_no as FeedBinSerialNo,bin_volume, top_diameter1 as top1, top_diameter2 as top2, top_height as top_H, " \
@@ -46,7 +48,7 @@ def MysqlGetSizeFeedBin(MYSQLconnect):
                 "bot_diameter1 as bot1, bot_diameter2 as bot2, bot_height as bot_H, " \
                 "lidar_height as lidar_h " \
                 "FROM tb_feedbin WHERE bot_diameter1 != 'NaN';"
-    return pd.read_sql_query(sql_state, MYSQLconnect)
+    return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
 ### DB    
 def SelectDataFromMYSQL(df, index):
@@ -64,6 +66,18 @@ def SelectDataFromMYSQL(df, index):
         if(dist > param.MAX_DETECTION_DISTANCE): continue  # 센서 측정값이 측정 최솟값을 넘는 경우 데이터 반영 (2024.11.27)
         dataTemp.append([x[i], y[i], z[i]])
     dataRaw = np.array(dataTemp)
+
+    st.session_state.zRange[0] = np.min(dataRaw, axis=0)[2]
+    st.session_state.zRange[1] = np.max(dataRaw, axis=0)[2]
+    if(df['center_x'][index] != None):
+        st.session_state.centerPos[0] = df['center_x'][index]
+    else :
+        st.session_state.centerPos[0] = 0
+
+    if(df['center_y'][index] != None):
+        st.session_state.centerPos[1] = df['center_y'][index]
+    else : 
+        st.session_state.centerPos[1] = 0
     
     ## 결과 출력        
     print(str(df['date'][index]) + "일 데이터를 선택하였습니다.")
@@ -145,6 +159,8 @@ def PointCloudToVoxel(df,maxDist,roiRadius,FeedBinSizeR, FeedBinSizeH):
         return [None, None]
     
     # Data
+    print(df.shape)
+
     x = df[:,0]
     y = df[:,1]
     z = df[:,2]
@@ -335,6 +351,10 @@ def GetFilteredData(dataRaw, dataSize):
     if(st.session_state.Debug):print("[GetFilteredData] 데이터 정제를 시작합니다.")
     # Calculate the Region of Interest (ROI)
     Center = [0, 0]  # 현재는 사용자 변수, 추후 벽 인식 알고리즘 후 변경 예정
+    Center[0] = st.session_state.centerPos[0]
+    Center[1] = st.session_state.centerPos[1]
+    print("Center : ",Center)
+    
     Radius = dataSize.mid2.iloc[0] / 2  # 사료통 중 위쪽 통 크기로 관심 영역 결정 (가장 넓은 영역으로 변경 필요)
     dataROI = GetRoIPointCloud(dataRaw, Center, Radius)
     lidar_heights = dataSize.lidar_h.iloc[0]
