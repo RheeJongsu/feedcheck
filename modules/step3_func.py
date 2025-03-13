@@ -7,7 +7,7 @@ from io import StringIO
 import math
 import plotly.graph_objects as go
 from modules import userParam as param
-
+    
 def MYSQL_Connect():
     ## MYSQL Info [engine]
     host = "constantec-db1.cba0g2ca0291.ap-northeast-2.rds.amazonaws.com"
@@ -22,14 +22,19 @@ def MYSQL_Connect():
     MYSQLconnect = engine.connect()
     return MYSQLconnect
 
+def AuthenticateUser(MYSQLconnect, username, password):
+     
+    sql_state = "select user_nm from tb_user where user_id = '" + str(username) + "' and password = '" + str(password) + "';"
+    return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
+
 def MysqlGetDepthDataShow(MYSQLconnect, date_start, date_end):
     sql_state = "select T1.chk_date, T1.std_volume, T1.std_amt, T1.stock_ratio, T1.desc" \
-                "from tb_change_data T1 where T1.chg_x !='' and T1.create_time between '" + str(date_start) + "' and '" + str(date_end) + "';"
+                "from tb_change_data T1 where T1.chg_x !='' and T1.create_time between '" + str(date_start) + "' and '" + str(date_end) + " 23:59:59';"
     return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
 def MysqlGetDepthDataold(MYSQLconnect, date_start, date_end):
     sql_state = "select T1.chk_date as date, T1.chg_volume as rawData, T1.chg_x as x, T1.chg_y as y, T1.chg_z as z, T1.std_volume, T1.std_amt, T1.stock_ratio, T1.desc " \
-                "from tb_change_data T1 where T1.chg_x !='' and T1.chk_date between '" + str(date_start) + "' and '" + str(date_end) + "' order by T1.chk_date desc;"
+                "from tb_change_data T1 where T1.chg_x !='' and T1.chk_date between '" + str(date_start) + "' and '" + str(date_end) + " 23:59:59' order by T1.chk_date desc;"
     return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
 def MysqlGetDepthData(MYSQLconnect, date_start, date_end):
@@ -38,8 +43,9 @@ def MysqlGetDepthData(MYSQLconnect, date_start, date_end):
                 " T1.std_amt, T1.stock_ratio, LPAD(CONCAT(FORMAT(ROUND(T1.stock_amt * 1000), 0), 'Kg'), 10, ' ') as stock_amt, " \
                 " T1.desc, T2.farm_nm, T3.bin_nm, T1.center_x, T1.center_y " \
                 " from tb_change_data T1, tb_farm T2, tb_feedbin T3 " \
-                " where  T1.chg_x !='' and T1.chk_date between '" + str(date_start) + "' and '" + str(date_end) + "' " \
+                " where  T1.chg_x !='' and T1.chk_date between '" + str(date_start) + "' and '" + str(date_end) + " 23:59:59' " \
                 " and T1.bin_seq = T3.bin_seq and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;"
+                
     return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
 def MysqlGetSizeFeedBin(MYSQLconnect):
