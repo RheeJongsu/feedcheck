@@ -44,8 +44,7 @@ def MysqlGetDepthData(MYSQLconnect, date_start, date_end):
                 " T1.desc, T2.farm_nm, T3.bin_nm, T1.center_x, T1.center_y " \
                 " from tb_change_data T1, tb_farm T2, tb_feedbin T3 " \
                 " where  T1.chg_x !='' and T1.chk_date between '" + str(date_start) + "' and '" + str(date_end) + " 23:59:59' " \
-                " and T1.bin_seq = T3.bin_seq and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;"
-                
+                " and T1.bin_seq = T3.bin_seq and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;" 
     return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
 def MysqlGetSizeFeedBin(MYSQLconnect):
