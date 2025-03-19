@@ -1,12 +1,14 @@
 import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
+import pandas as pd
 import math
 from modules import userParam as param
 
 ######################################### Display ######################################### 
 ## Point로 출력    
 def Display3DScatter(fig, df, pointSize=5, colormap='jet', scatterOpcity=1):
+     
     size = pointSize * np.ones((df.shape[0], 1))        
     fig.add_trace(go.Scatter3d(
         x=df[:, 0],

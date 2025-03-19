@@ -128,7 +128,13 @@ def Show3DRawData(dataRaw):
     zRange[0] = st.session_state.zRange[0]
     zRange[1] = st.session_state.zRange[1]
     #Draw
+    
     fig = go.Figure()
+    if dataRaw is None:
+        print("dataRaw가 None입니다.")
+        st.write("❌ 오류: Point 데이터 수가 100개 보다 작아 출력이 불가능합니다.")
+        return  # None이면 함수 종료
+    
     fig = display.Display3DScatter(fig,dataRaw)
     fig = display.DisplayCenter(fig, Center, zRange)
     fig.update_layout(
