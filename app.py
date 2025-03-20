@@ -1,6 +1,7 @@
 # app.py
 import streamlit as st
 import datetime
+import pytz
 import time
 from dateutil.relativedelta import relativedelta
 from modules import step1_user_setup, step2_install_dependencies
@@ -17,7 +18,7 @@ article1, article2= st.columns(2)
 DefaultDeltaDate = 25
 
 def initSearchingDate():
-    today = datetime.date.today()
+    today = datetime.datetime.now(pytz.timezone('Asia/Seoul')).date()
     date_start = today - datetime.timedelta(days=DefaultDeltaDate) # 25일전
     date_end = today
     st.session_state.searchingDate[0] = date_start
@@ -240,7 +241,7 @@ def main():
                     # 검색일 선택
                     st.date_input("측정일을 선택하세요.",
                                 value=st.session_state.searchingDate,
-                                max_value=datetime.date.today(),
+                                max_value=datetime.datetime.now(pytz.timezone('Asia/Seoul')).date(),
                                 format="YYYY-MM-DD",
                                 key="searchingDateNew",
                                 on_change=updateSearchingDate(farm_seq))
@@ -249,9 +250,9 @@ def main():
 
                     if st.button(" 조 회 "):   
                         initSearchingDate()
-                        st.session_state.ConnDB = step3_func.MYSQL_Connect()
-                        st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq)
-                        st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBin(st.session_state.ConnDB)
+                        #st.session_state.ConnDB = step3_func.MYSQL_Connect()
+                        #st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq)
+                        #st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBin(st.session_state.ConnDB)
                         st.cache_data.clear()
                         st.cache_resource.clear()
             
@@ -362,7 +363,7 @@ def main():
                 # 검색일 선택
                 st.date_input("측정일을 선택하세요.",
                             value=st.session_state.searchingDate,
-                            max_value=datetime.date.today(),
+                            max_value=datetime.datetime.now(pytz.timezone('Asia/Seoul')).date(),
                             format="YYYY-MM-DD",
                             key="searchingDateNew",
                             on_change=updateSearchingDate(farm_seq))
@@ -435,7 +436,7 @@ def main():
                 # 검색일 선택 (위와 동일한 형태로 중복성 방지 필요)
                 st.date_input("측정일을 선택하세요.",
                         value=st.session_state.searchingDate,
-                        max_value=datetime.date.today(),
+                        max_value=datetime.datetime.now(pytz.timezone('Asia/Seoul')).date(),
                         format="YYYY-MM-DD",
                         key="searchingDateNew",
                         on_change=updateSearchingDate(farm_seq))
