@@ -235,8 +235,7 @@ def main():
                     if not options_dict.empty and selected_farm:
                         selected_farm_seq = options_dict[options_dict['farm_nm'] == selected_farm]['farm_seq'].iloc[0]
                     
-                    farm_seq = str(selected_farm_seq)    
-                    strfarm_seq = farm_seq
+                    farm_seq = str(selected_farm_seq)  
                     
                     # 검색일 선택
                     st.date_input("측정일을 선택하세요.",
@@ -439,7 +438,7 @@ def main():
                         max_value=datetime.date.today(),
                         format="YYYY-MM-DD",
                         key="searchingDateNew",
-                        on_change=updateSearchingDate)
+                        on_change=updateSearchingDate(farm_seq))
 
                 # Data Table 
                 st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq)
