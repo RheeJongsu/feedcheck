@@ -23,15 +23,26 @@ def MYSQL_Connect():
     return MYSQLconnect
 
 def AuthenticateUser(MYSQLconnect, username, password):     
-    sql_state = "select user_nm from tb_user where user_id = '" + str(username) + "' and password = '" + str(password) + "';"
+    sql_state = "select user_nm  from tb_user where user_id = '" + str(username) + "' and password = '" + str(password) + "';"
     return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
-
 def MysqlGetFarmNo(MYSQLconnect, username):
-    sql_state = "select farm_seq, farm_nm from  tb_farm  where use_yn = 'Y' " \
+    sql_state = "select farm_seq, farm_nm   from  tb_farm  where use_yn = 'Y' "  
     
     if username != "constantec":    
        sql_state += " and user_seq = (select user_seq from tb_user where user_id = '" + str(username) + "');"    
+       
+    # print(" 쿼리11 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", sql_state)            
+                
+    return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
+
+def MysqlGetFeedcheckNo(MYSQLconnect, farm_seq):     
+    sql_state = "select 0 as bin_seq, '선택안함' as bin_nm " \
+                " union all " \
+                " select T1.bin_seq, T1.bin_nm   from tb_feedbin T1  " \
+                " where T1.use_yn = 'Y' "  \
+                "   and T1.farm_seq = '" + farm_seq + "' " 
+ 
     return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
 def MysqlGetDepthDataShow(MYSQLconnect, date_start, date_end):
@@ -44,18 +55,20 @@ def MysqlGetDepthDataold(MYSQLconnect, date_start, date_end):
                 "from tb_change_data T1 where T1.chg_x !='' and T1.chk_date between '" + str(date_start) + "' and '" + str(date_end) + " 23:59:59' order by T1.chk_date desc;"
     return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
-def MysqlGetDepthData(MYSQLconnect, date_start, date_end, farm_seq):
+def MysqlGetDepthData(MYSQLconnect, date_start, date_end, farm_seq, bin_Seq):
     sql_state = "select T1.chk_date as date, LEFT(T1.chk_date, 10) as fistdt,  SUBSTR(T1.chk_date, 12, 5) as lastdt, " \
                 " T1.chg_volume as rawData, T1.chg_x as x, T1.chg_y as y, T1.chg_z as z, T1.std_volume, " \
                 " T1.std_amt, T1.stock_ratio, LPAD(CONCAT(FORMAT(ROUND(T1.stock_amt * 1000), 0), 'Kg'), 10, ' ') as stock_amt, " \
                 " T1.desc, T2.farm_nm, T3.bin_nm, T1.center_x, T1.center_y " \
                 " from tb_change_data T1, tb_farm T2, tb_feedbin T3 " \
                 " where  T1.chg_x !='' and T1.chk_date between '" + str(date_start) + "' and '" + str(date_end) + " 23:59:59' " \
-                " and T1.bin_seq = T3.bin_seq and T2.farm_seq = '" + farm_seq + "' " \
-                " and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;" 
-    
-    print(" 쿼리 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", sql_state)            
+                " and T1.bin_seq = T3.bin_seq and T2.farm_seq = '" + farm_seq + "' "  
                 
+    if bin_Seq != "0":    
+       sql_state += " and T3.bin_Seq = '" + bin_Seq + "' " \
+                        
+    sql_state += " and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;" 
+    
     return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
 def MysqlGetSizeFeedBin(MYSQLconnect):

@@ -5,9 +5,11 @@ import pandas as pd
 import math
 from modules import userParam as param
 
+
 ######################################### Display ######################################### 
 ## Point로 출력    
 def Display3DScatter(fig, df, pointSize=5, colormap='jet', scatterOpcity=1):
+     
      
     size = pointSize * np.ones((df.shape[0], 1))        
     fig.add_trace(go.Scatter3d(
@@ -233,6 +235,7 @@ def Draw3DLayout(fig, title, XYRange, ZRange, figureHeight = 1000):
     if(XYRange is None):
         fig.update_layout(
             title=title,
+            margin=dict(l=0, r=0, b=0, t=0),
             scene=dict(
                 xaxis_title="X Axis",
                 yaxis_title="Y Axis",
@@ -246,6 +249,7 @@ def Draw3DLayout(fig, title, XYRange, ZRange, figureHeight = 1000):
     else:
         fig.update_layout(
             title=title,
+            margin=dict(l=0, r=0, b=0, t=0),
             scene=dict(
                 xaxis=dict(
                     title="X Axis",
@@ -268,7 +272,8 @@ def Draw3DLayout(fig, title, XYRange, ZRange, figureHeight = 1000):
 def Draw3DLayout(fig, title, XYRange, ZRange, height = 1000):
     if(XYRange is None):
         fig.update_layout(            
-            title=title,            
+            title=title,
+            margin=dict(l=0, r=0, b=0, t=0),            
             scene=dict(                
                 xaxis_title="X Axis",
                 yaxis_title="Y Axis",
@@ -281,7 +286,8 @@ def Draw3DLayout(fig, title, XYRange, ZRange, height = 1000):
         )
     else:
         fig.update_layout(            
-            title=title,            
+            title=title,    
+            margin=dict(l=0, r=0, b=0, t=0),        
             scene=dict(                
                 xaxis=dict(                    
                     title="X Axis",                    

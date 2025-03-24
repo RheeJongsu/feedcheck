@@ -3,6 +3,7 @@ import streamlit as st
 import datetime
 import pytz
 import time
+import pandas as pd
 from dateutil.relativedelta import relativedelta
 from modules import step1_user_setup, step2_install_dependencies
 from modules import step3_func
@@ -124,7 +125,7 @@ def main():
     strfarm_seq = ""
 
     ## Event Callback
-    def updateSearchingDate(farm_seq):
+    def updateSearchingDate(farm_seq, bin_seq):
          
         if 'searchingDateNew' not in st.session_state:
             return
@@ -147,7 +148,7 @@ def main():
                 print(st.session_state.searchingDate)
                 st.session_state.searchingDate[0] = st.session_state.searchingDateNew[0]
                 st.session_state.searchingDate[1] = st.session_state.searchingDateNew[1]
-                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq)
+                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
                 st.session_state.IsLoad = True
                 
          
@@ -197,6 +198,15 @@ def main():
     with empty1:
         st.empty()
     with Contents1:
+        
+        
+        selected_farm = None
+        selected_bin = None 
+        selected_farm_seq = None
+        selected_bin_seq = None
+        farm_seq = None
+        bin_seq = None
+            
         ## Error Message
         if(st.session_state.MessageShow is not None):
             st.markdown(st.session_state.MessageShow, unsafe_allow_html=True)
@@ -213,130 +223,183 @@ def main():
         
         ## 최근 정보를 열람        
         elif choice == "측정 데이터":
+              
             
             # 임시 코드 값 설정
             if "selected_code" not in st.session_state:
                 st.session_state.selected_code = ""
             
             username = st.session_state.userName
-            options_dict = step3_func.MysqlGetFarmNo(st.session_state.ConnDB, username)  #로그인 유저에게 허용된 농장 List를 조회
-              
+            farm_df = step3_func.MysqlGetFarmNo(st.session_state.ConnDB, username)  #로그인 유저에게 허용된 농장 List를 조회
+            bin_df = pd.DataFrame()
+                
+               
             # Left Side
             with article1:
                 
-                colA, colB = st.columns([3, 1]) 
                 
-                with colA:
+                # 농가 선택
+                if not farm_df.empty:
+                    farm_names = farm_df['farm_nm'].tolist()
+                    selected_farm = st.selectbox("농가 선택", farm_names, on_change=on_select_change)  
                     
-                    # 농가 선택
-                    if not options_dict.empty:
-                        farm_names = options_dict['farm_nm'].tolist()
-                        selected_farm = st.selectbox("농가 선택", farm_names, on_change=on_select_change)  
-                        
-                    if not options_dict.empty and selected_farm:
-                        selected_farm_seq = options_dict[options_dict['farm_nm'] == selected_farm]['farm_seq'].iloc[0]
-                    
-                    farm_seq = str(selected_farm_seq)  
-                    
-                    # 검색일 선택
-                    st.date_input("측정일을 선택하세요.",
-                                value=st.session_state.searchingDate,
-                                max_value=datetime.datetime.now(pytz.timezone('Asia/Seoul')).date(),
-                                format="YYYY-MM-DD",
-                                key="searchingDateNew",
-                                on_change=updateSearchingDate(farm_seq))
-                with colB:
-                    st.markdown("<br>", unsafe_allow_html=True)  # 🔹 공백 추가
-
-                    if st.button(" 조 회 "):   
-                        initSearchingDate()
-                        #st.session_state.ConnDB = step3_func.MYSQL_Connect()
-                        #st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq)
-                        #st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBin(st.session_state.ConnDB)
-                        st.cache_data.clear()
-                        st.cache_resource.clear()
+                if not farm_df.empty and selected_farm:
+                    selected_farm_seq = farm_df[farm_df['farm_nm'] == selected_farm]['farm_seq'].iloc[0]
+                
+                if selected_farm_seq is not None:
+                    farm_seq = str(selected_farm_seq)
+                else:
+                    farm_seq = None
+                 
+                # 피드빈 선택 
+                bin_df = step3_func.MysqlGetFeedcheckNo(st.session_state.ConnDB, farm_seq)  #로그인 유저에게 허용된 농장 List를 조회
+                 
+                # 피드빈 선택
+                if not bin_df.empty:
+                    bin_names = bin_df['bin_nm'].tolist()
+                    selected_bin = st.selectbox("피드빈 선택", bin_names, on_change=on_select_change)
+                 
+                if not bin_df.empty and selected_bin:
+                    selected_bin_seq = bin_df[bin_df['bin_nm'] == selected_bin]['bin_seq'].iloc[0]
+                else:
+                    selected_bin_seq = None    
             
+                if selected_bin_seq is not None:
+                    bin_seq = str(selected_bin_seq)
+                else:
+                    bin_seq = None
+                         
+                # 검색일 선택
+                st.date_input("측정일을 선택하세요.",
+                            value=st.session_state.searchingDate,
+                            max_value=datetime.datetime.now(pytz.timezone('Asia/Seoul')).date(),
+                            format="YYYY-MM-DD",
+                            key="searchingDateNew",
+                            on_change=updateSearchingDate(farm_seq, bin_seq))
+                
+                st.markdown("<br>", unsafe_allow_html=True)  # 🔹 공백 추가
+
+                if st.button(" 조 회 "):   
+                    initSearchingDate()
+                    #st.session_state.ConnDB = step3_func.MYSQL_Connect()
+                    #st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq)
+                    #st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBin(st.session_state.ConnDB)
+                    st.cache_data.clear()
+                    st.cache_resource.clear()
+
                 # 상단 행 (초기 공백 생성)
                 placeholder = st.empty()
                 with placeholder:  # placeholder에 콘텐츠를 추가
                    st.markdown(
-                        '<p style="font-size: 20px; color: #ababab; font-weight: bold; margin: 0;">농가명 : <p> '
-                        + '<p style="font-size: 20px; color: #ababab; font-weight: bold; margin: 0;">측정일 : <p> '
-                        + '<p style="font-size: 20px; color: #ababab; font-weight: bold; margin: 5;">사료양 : 재고율(%) &nbsp &nbsp  재고량 (ton)</p> <br>', 
+                        '<p style="font-size: 18px; color: #fbcbfa; background-color: #3b3b5a; font-weight: bold; margin: 2;">농장명 : <p> '
+                        + '<p style="font-size: 18px; color: #fbcbfa; background-color: #3b3b5a; font-weight: bold; margin: 2;">측정일시 : <p> '
+                        + '<p style="font-size: 18px; color: #fbcbfa; background-color: #3b3b5a; font-weight: bold; margin: 2;">사료양 : 재고율(%) &nbsp &nbsp  재고량 (Kg)</p> <br>', 
                         unsafe_allow_html=True
                     )
-                 
+                    
                 # Data Table 
-                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq)
-                    
-                #if not st.session_state.mysqlDepthDataAll.empty:
-                event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['fistdt','lastdt','bin_nm','stock_ratio','stock_amt', 'desc']],
-                            column_config={
-                                "fistdt": st.column_config.Column(
-                                    label="측정일자",
-                                ),
-                                "lastdt": st.column_config.Column(
-                                    label="측정시간",
-                                ),
-                                "bin_nm": st.column_config.Column(
-                                    label="장비번호",
-                                ),
-                                "stock_ratio": st.column_config.NumberColumn(
-                                    label="재고율",  
-                                    format="%.0f%%"  # 백분율(%) 변환 
-                                ),
-                                "stock_amt": st.column_config.Column(
-                                    label="재고량",
-                                ), 
-                                "desc": st.column_config.Column(
-                                    label="비고",
-                                    width=200
-                                )},
-                            on_select='rerun',
-                            selection_mode='single-row'
-                            )
+                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
                  
-                # Select Data
-                if len(event.selection['rows']):
-                    st.session_state.dataIndex = int(event.selection['rows'][0])
-                    dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)  # 거리 데이터 추출
-                    # 사료통 크기 정보를 이용한 선택(동일 용량이 있는 경우 변경해야함) 
-                    dataSize = step3_func.SelectSizeFeedBinFromSQL(st.session_state.mysqlFeedBinDataAll, st.session_state.mysqlDepthDataAll.std_volume[st.session_state.dataIndex])
-                    
-                    st.session_state.dataRaw = dataRaw
-                    st.session_state.dataFeedBin = dataSize
-                    
-                    # 체크된 행의 정보를 한줄로 보여줌.
-                    selected_index = int(event.selection['rows'][0])
-                    selected_row = st.session_state.mysqlDepthDataAll.loc[selected_index]
-                    
-                 
-                with placeholder:  # placeholder에 콘텐츠를 추가 
-                    
-                    strFarmNm = ""; strFistdt = ""; strLastdt = ""; strStockRatio = ""; strStockAmt = ""
-                                        
-                    if len(event.selection['rows']):
-                        strFarmNm = selected_row['farm_nm']
-                        strFistdt = str(selected_row['fistdt'])
-                        strLastdt = str(selected_row['lastdt'])
-                        strStockRatio = str(round(selected_row['stock_ratio']))
-                        strStockAmt = str(selected_row['stock_amt']) 
-                         
-                    st.markdown(
-                        '<p style="font-size: 20px; color: #8b8bfa; font-weight: bold; margin: 0;">' + '농가명 : &nbsp ' +  strFarmNm + '&nbsp</p> '
-                        + '<p style="font-size: 20px; color: #8b8bfa; font-weight: bold; margin: 0;">' + '측정일 : &nbsp ' +  strFistdt + '&nbsp ' + strLastdt + '</p> '
-                        + '<p style="font-size: 20px; color: #fb7b7b; font-weight: bold; margin: 0;">' + '사료양 : &nbsp ' + strStockRatio
-                        + '% &nbsp &nbsp' + strStockAmt + ' </p> <br> ',
-                        unsafe_allow_html=True
-                    )
-
-            # Right Side
+          
+            # Left Side
             with article2:
                  
-                if(st.session_state.dataRaw is not None):
-                    step4_data.Show3DFeedBin(st.session_state.dataRaw, st.session_state.dataFeedBin)
+                # 초기 탭 상태 설정
+                if 'active_tab' not in st.session_state:
+                    st.session_state.active_tab = '측정 내역'
 
-        
+                
+                st.markdown("""
+                    <style> 
+                    .stTabs [data-baseweb="tab"] {
+                        font-size: 20px !important;
+                        font-weight: bold !important;
+                        color: #fafafa; 
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)
+                
+                
+                tabs = st.tabs(["측정 내역", "3D 피드빈"])
+                
+                with tabs[0]:
+                        
+                    st.subheader("측정 내역") 
+                    
+                    #if not st.session_state.mysqlDepthDataAll.empty:
+                    event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['fistdt','lastdt','bin_nm','stock_ratio','stock_amt', 'desc']],
+                                column_config={
+                                    "fistdt": st.column_config.Column(
+                                        label="측정일자",
+                                    ),
+                                    "lastdt": st.column_config.Column(
+                                        label="측정시간",
+                                    ),
+                                    "bin_nm": st.column_config.Column(
+                                        label="장비번호",
+                                    ),
+                                    "stock_ratio": st.column_config.NumberColumn(
+                                        label="재고율",  
+                                        format="%.0f%%"  # 백분율(%) 변환 
+                                    ),
+                                    "stock_amt": st.column_config.Column(
+                                        label="재고량",
+                                    ), 
+                                    "desc": st.column_config.Column(
+                                        label="비고",
+                                        width=200
+                                    )},
+                                on_select='rerun',
+                                selection_mode='single-row'
+                                )
+                    
+                    # Select Data
+                    if len(event.selection['rows']):
+                        st.session_state.dataIndex = int(event.selection['rows'][0])
+                        dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)  # 거리 데이터 추출
+                        # 사료통 크기 정보를 이용한 선택(동일 용량이 있는 경우 변경해야함) 
+                        dataSize = step3_func.SelectSizeFeedBinFromSQL(st.session_state.mysqlFeedBinDataAll, st.session_state.mysqlDepthDataAll.std_volume[st.session_state.dataIndex])
+                        
+                        st.session_state.dataRaw = dataRaw
+                        st.session_state.dataFeedBin = dataSize
+                        
+                        # 체크된 행의 정보를 한줄로 보여줌.
+                        selected_index = int(event.selection['rows'][0])
+                        selected_row = st.session_state.mysqlDepthDataAll.loc[selected_index]
+                        
+                    with placeholder:  # placeholder에 콘텐츠를 추가 
+                    
+                        strFarmNm = ""; strFistdt = ""; strLastdt = ""; strStockRatio = ""; strStockAmt = ""
+                                            
+                        if len(event.selection['rows']):
+                            strFarmNm = selected_row['farm_nm']
+                            strFistdt = str(selected_row['fistdt'])
+                            strLastdt = str(selected_row['lastdt'])
+                            strStockRatio = str(round(selected_row['stock_ratio']))
+                            strStockAmt = str(selected_row['stock_amt']) 
+                            
+                        st.markdown(
+                            '<p style="font-size: 18px; color: #fbcbfa; background-color: #3b3b5a; margin: 2;">' + '농가명 : &nbsp ' +  strFarmNm + '&nbsp</p> '
+                            + '<p style="font-size: 18px; color: #fbcbfa; background-color: #3b3b5a; margin: 2;">' + '측정일 : &nbsp ' +  strFistdt + '&nbsp ' + strLastdt + '</p> '
+                            + '<p style="font-size: 18px; color: #fbcbfa; background-color: #3b3b5a; margin: 2;">' + '사료양 : &nbsp ' + strStockRatio
+                            + '% &nbsp &nbsp' + strStockAmt + ' </p> <br> ',
+                            unsafe_allow_html=True
+                        )
+                        
+                        
+                            
+                    # event = st.data_editor(...) 또는 st.dataframe(...)
+
+                with tabs[1]:
+                    
+                    st.subheader("3D 피드빈")
+                    with st.container():  # 컨텐츠 추가
+                        if(st.session_state.dataRaw is not None):
+                            step4_data.Show3DFeedBin(st.session_state.dataRaw, st.session_state.dataFeedBin)
+                    
+                      
+
+            
         ## 특정 일의 데이터를 열람
         elif choice == "측정 데이터(수직)":
             
@@ -345,31 +408,55 @@ def main():
                 st.session_state.selected_code = ""
                  
             username = st.session_state.userName
-            options_dict = step3_func.MysqlGetFarmNo(st.session_state.ConnDB, username)  #로그인 유저에게 허용된 농장 List를 조회
+            farm_df = step3_func.MysqlGetFarmNo(st.session_state.ConnDB, username)  #로그인 유저에게 허용된 농장 List를 조회
             
             # Left Side
             with article1:
                 
+                 
                 # 농가 선택
-                if not options_dict.empty:
-                    farm_names = options_dict['farm_nm'].tolist()
+                if not farm_df.empty:
+                    farm_names = farm_df['farm_nm'].tolist()
                     selected_farm = st.selectbox("농가 선택", farm_names, on_change=on_select_change)  
                     
-                if not options_dict.empty and selected_farm:
-                    selected_farm_seq = options_dict[options_dict['farm_nm'] == selected_farm]['farm_seq'].iloc[0]
+                if not farm_df.empty and selected_farm:
+                    selected_farm_seq = farm_df[farm_df['farm_nm'] == selected_farm]['farm_seq'].iloc[0]
                 
-                farm_seq = str(selected_farm_seq)    
-                
+                if selected_farm_seq is not None:
+                    farm_seq = str(selected_farm_seq)
+                else:
+                    farm_seq = None
+                   
+                      
+                # 피드빈 선택 
+                bin_df = step3_func.MysqlGetFeedcheckNo(st.session_state.ConnDB, farm_seq)  #로그인 유저에게 허용된 농장 List를 조회
+                 
+                # 피드빈 선택
+                if not bin_df.empty:
+                    bin_names = bin_df['bin_nm'].tolist()
+                    selected_bin = st.selectbox("피드빈 선택", bin_names, on_change=on_select_change)
+                 
+                if not bin_df.empty and selected_bin:
+                    selected_bin_seq = bin_df[bin_df['bin_nm'] == selected_bin]['bin_seq'].iloc[0]
+                else:
+                    selected_bin_seq = None    
+            
+                if selected_bin_seq is not None:
+                    bin_seq = str(selected_bin_seq)
+                else:
+                    bin_seq = None
+                    
+                    
                 # 검색일 선택
                 st.date_input("측정일을 선택하세요.",
                             value=st.session_state.searchingDate,
                             max_value=datetime.datetime.now(pytz.timezone('Asia/Seoul')).date(),
                             format="YYYY-MM-DD",
                             key="searchingDateNew",
-                            on_change=updateSearchingDate(farm_seq))
+                            on_change=updateSearchingDate(farm_seq, bin_seq))
                 
                 # Data Table 
-                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq)
+                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
                   
                 # Data Table (위와 동일한 형태로 중복성 방지 필요)
                 event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['fistdt','lastdt','bin_nm','stock_ratio','stock_amt','desc']],
@@ -415,22 +502,44 @@ def main():
             
             
             username = st.session_state.userName
-            options_dict = step3_func.MysqlGetFarmNo(st.session_state.ConnDB, username)  #로그인 유저에게 허용된 농장 List를 조회
+            farm_df = step3_func.MysqlGetFarmNo(st.session_state.ConnDB, username)  #로그인 유저에게 허용된 농장 List를 조회
             
             # Left Side
             with article1:
                 ## Title
                  
                 # 농가 선택
-                if not options_dict.empty:
-                    farm_names = options_dict['farm_nm'].tolist()
+                if not farm_df.empty:
+                    farm_names = farm_df['farm_nm'].tolist()
                     selected_farm = st.selectbox("농가 선택", farm_names, on_change=on_select_change)  
                     
-                if not options_dict.empty and selected_farm:
-                    selected_farm_seq = options_dict[options_dict['farm_nm'] == selected_farm]['farm_seq'].iloc[0]
+                if not farm_df.empty and selected_farm:
+                    selected_farm_seq = farm_df[farm_df['farm_nm'] == selected_farm]['farm_seq'].iloc[0]
                 
-                farm_seq = str(selected_farm_seq)    
-                
+                if selected_farm_seq is not None:
+                    farm_seq = str(selected_farm_seq)
+                else:
+                    farm_seq = None
+                   
+                      
+                # 피드빈 선택 
+                bin_df = step3_func.MysqlGetFeedcheckNo(st.session_state.ConnDB, farm_seq)  #로그인 유저에게 허용된 농장 List를 조회
+                 
+                # 피드빈 선택
+                if not bin_df.empty:
+                    bin_names = bin_df['bin_nm'].tolist()
+                    selected_bin = st.selectbox("피드빈 선택", bin_names, on_change=on_select_change)
+                 
+                if not bin_df.empty and selected_bin:
+                    selected_bin_seq = bin_df[bin_df['bin_nm'] == selected_bin]['bin_seq'].iloc[0]
+                else:
+                    selected_bin_seq = None    
+            
+                if selected_bin_seq is not None:
+                    bin_seq = str(selected_bin_seq)
+                else:
+                    bin_seq = None
+                     
                 # st.title("CONSTANTEC FEED CHECK \n 3D LiDAR 측정 시스템 (3D Bin Manager 1.0)") 
                 # st.markdown("*측정 데이터 조회 선택")
                 # 검색일 선택 (위와 동일한 형태로 중복성 방지 필요)
@@ -439,10 +548,10 @@ def main():
                         max_value=datetime.datetime.now(pytz.timezone('Asia/Seoul')).date(),
                         format="YYYY-MM-DD",
                         key="searchingDateNew",
-                        on_change=updateSearchingDate(farm_seq))
+                        on_change=updateSearchingDate(farm_seq, bin_seq))
 
                 # Data Table 
-                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq)
+                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
                   
                   
                 # Data Table (위와 동일한 형태로 중복성 방지 필요)
