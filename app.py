@@ -309,17 +309,6 @@ def main():
                     st.session_state.active_tab = '측정 내역'
 
                 
-                st.markdown("""
-                    <style> 
-                    .stTabs [data-baseweb="tab"] {
-                        font-size: 20px !important;
-                        font-weight: bold !important;
-                        color: #fafafa; 
-                    }
-                    </style>
-                    """, unsafe_allow_html=True)
-                
-                
                 tabs = st.tabs(["측정 내역", "3D 피드빈"])
                 
                 with tabs[0]:

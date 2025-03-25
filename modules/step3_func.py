@@ -194,6 +194,11 @@ def PointCloudToVoxel(df,maxDist,roiRadius,FeedBinSizeR, FeedBinSizeH):
     y = df[:,1]
     z = df[:,2]
 
+    meanZ = sum(z) / len(z)
+    deltaPercent = 0.1
+    boundMaxZ = meanZ + maxDist*deltaPercent
+    boundMinZ = meanZ - maxDist*deltaPercent
+
     # Voxel Map
     map         = maxDist * np.ones([param.VOXEL_SIZE,param.VOXEL_SIZE],dtype = float)
     map_update  = np.zeros([param.VOXEL_SIZE,param.VOXEL_SIZE],dtype = float)
@@ -205,9 +210,9 @@ def PointCloudToVoxel(df,maxDist,roiRadius,FeedBinSizeR, FeedBinSizeH):
         # Check Bound
         if(indexX > param.VOXEL_SIZE or indexX < 1): continue
         if(indexY > param.VOXEL_SIZE or indexY < 1): continue
-
-        if (map[indexX,indexY] > z[index] or map[indexX,indexY] != maxDist):
-            map[indexX,indexY] = z[index]
+        if((z[index] < boundMaxZ and z[index] > boundMinZ) or map[indexX,indexY] != maxDist): # 유효성 검사
+            if (map[indexX,indexY] > z[index]):  # 기록 조건 (현재는 최대 높이값)
+                map[indexX,indexY] = z[index]
 
     ## 출력을 위해서 정보를 뒤집어서 보여줌 (센서 거리 -> 사료의 높이)
     map = maxDist - map

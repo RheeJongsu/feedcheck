@@ -63,7 +63,7 @@ def connect_data(ConnDB):
     finally:
         ConnDB.close()
 
-@st.cache_resource
+#@st.cache_resource   #Cache Active
 def Show3DFeedBin(dataRaw, dataSize):
     ## Result
     [dataModified, dataBound] = step3_func.GetFilteredData(dataRaw, dataSize)
