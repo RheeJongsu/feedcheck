@@ -16,11 +16,11 @@ empty1, Contents1, empty2 = st.columns([0.1,1,0.1])
 article1, article2= st.columns(2)
 
 # Constants
-DefaultDeltaDate = 25
+DefaultDeltaDate = 10
 
 def initSearchingDate():
     today = datetime.datetime.now(pytz.timezone('Asia/Seoul')).date()
-    date_start = today - datetime.timedelta(days=DefaultDeltaDate) # 25일전
+    date_start = today - datetime.timedelta(days=DefaultDeltaDate) # 10일전
     date_end = today
     st.session_state.searchingDate[0] = date_start
     st.session_state.searchingDate[1] = date_end
@@ -183,13 +183,13 @@ def main():
         st.sidebar.text(" ") 
         st.sidebar.text(" ") 
         
-        if st.sidebar.button("조회"): 
-            initSearchingDate()
+        #if st.sidebar.button("조회"): 
+            #initSearchingDate()
             #st.session_state.ConnDB = step3_func.MYSQL_Connect()
             #st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], strfarm_seq)
             #st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBin(st.session_state.ConnDB)
-            st.cache_data.clear()
-            st.cache_resource.clear()
+            #st.cache_data.clear()
+            #st.cache_resource.clear()
              
     else:
         choice = st.sidebar.radio(" ", ["Login"])
