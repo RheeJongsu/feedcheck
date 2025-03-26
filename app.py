@@ -291,9 +291,9 @@ def main():
                 placeholder = st.empty()
                 with placeholder:  # placeholder에 콘텐츠를 추가
                    st.markdown(
-                        '<p style="font-size: 18px; color: #fbcbfa; background-color: #3b3b5a; font-weight: bold; margin: 2;">농장명 : <p> '
-                        + '<p style="font-size: 18px; color: #fbcbfa; background-color: #3b3b5a; font-weight: bold; margin: 2;">측정일시 : <p> '
-                        + '<p style="font-size: 18px; color: #fbcbfa; background-color: #3b3b5a; font-weight: bold; margin: 2;">사료양 : 재고율(%) &nbsp &nbsp  재고량 (Kg)</p> <br>', 
+                        '<p style="font-size: 14px; color: #fbcbfa; background-color: #3b3b5a; font-weight: bold; margin: 2;">농장명 : <p> '
+                        + '<p style="font-size: 14px; color: #fbcbfa; background-color: #3b3b5a; font-weight: bold; margin: 2;">측정일시 : <p> '
+                        + '<p style="font-size: 14px; color: #fbcbfa; background-color: #3b3b5a; font-weight: bold; margin: 2;">사료양 : 재고율(%) &nbsp &nbsp  재고량 (Kg)</p> <br>', 
                         unsafe_allow_html=True
                     )
                     
@@ -301,7 +301,7 @@ def main():
                 st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
                  
           
-            # Left Side
+            # right Side
             with article2:
                  
                 # 초기 탭 상태 설정
@@ -312,9 +312,8 @@ def main():
                 tabs = st.tabs(["측정 내역", "3D 피드빈"])
                 
                 with tabs[0]:
-                        
-                    st.subheader("측정 내역") 
-                    
+                         
+                    st.markdown("###### 측정 내역") # 더 작음
                     #if not st.session_state.mysqlDepthDataAll.empty:
                     event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['fistdt','lastdt','bin_nm','stock_ratio','stock_amt', 'desc']],
                                 column_config={
@@ -368,9 +367,9 @@ def main():
                             strStockAmt = str(selected_row['stock_amt']) 
                             
                         st.markdown(
-                            '<p style="font-size: 18px; color: #fbcbfa; background-color: #3b3b5a; margin: 2;">' + '농가명 : &nbsp ' +  strFarmNm + '&nbsp</p> '
-                            + '<p style="font-size: 18px; color: #fbcbfa; background-color: #3b3b5a; margin: 2;">' + '측정일 : &nbsp ' +  strFistdt + '&nbsp ' + strLastdt + '</p> '
-                            + '<p style="font-size: 18px; color: #fbcbfa; background-color: #3b3b5a; margin: 2;">' + '사료양 : &nbsp ' + strStockRatio
+                            '<p style="font-size: 14px; color: #fbcbfa; background-color: #3b3b5a; margin: 2;">' + '농가명 : &nbsp ' +  strFarmNm + '&nbsp</p> '
+                            + '<p style="font-size: 14px; color: #fbcbfa; background-color: #3b3b5a; margin: 2;">' + '측정일 : &nbsp ' +  strFistdt + '&nbsp ' + strLastdt + '</p> '
+                            + '<p style="font-size: 14px; color: #fbcbfa; background-color: #3b3b5a; margin: 2;">' + '사료양 : &nbsp ' + strStockRatio
                             + '% &nbsp &nbsp' + strStockAmt + ' </p> <br> ',
                             unsafe_allow_html=True
                         )
@@ -381,7 +380,7 @@ def main():
 
                 with tabs[1]:
                     
-                    st.subheader("3D 피드빈")
+                    st.markdown("###### 3D 피드빈") # 더 작음
                     with st.container():  # 컨텐츠 추가
                         if(st.session_state.dataRaw is not None):
                             step4_data.Show3DFeedBin(st.session_state.dataRaw, st.session_state.dataFeedBin)
@@ -488,8 +487,7 @@ def main():
 
         # 사료통 없는 사료 정보를 확대해서 보여주는 요소
         elif choice == "측정 데이터(무보정)":
-            
-            
+             
             username = st.session_state.userName
             farm_df = step3_func.MysqlGetFarmNo(st.session_state.ConnDB, username)  #로그인 유저에게 허용된 농장 List를 조회
             
@@ -542,48 +540,68 @@ def main():
                 # Data Table 
                 st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
                   
-                  
-                # Data Table (위와 동일한 형태로 중복성 방지 필요)
-                event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['fistdt','lastdt','bin_nm','stock_ratio','stock_amt','desc']],
-                        column_config={
-                            "fistdt": st.column_config.Column(
-                               label="측정일자",
-                            ),
-                            "lastdt": st.column_config.Column(
-                                label="측정시간",
-                            ),
-                            "bin_nm": st.column_config.Column(
-                                label="장비번호",
-                            ),
-                            "stock_ratio": st.column_config.NumberColumn(
-                                label="재고율",  
-                                format="%.0f%%"  # 백분율(%) 변환 
-                            ),
-                            "stock_amt": st.column_config.Column(
-                                label="재고량",
-                            ), 
-                            "desc": st.column_config.Column(
-                                label="비고",
-                                width=200
-                            )},
-                        on_select='rerun',
-                        selection_mode='single-row'
-                        )
-                # Select Data (유사하나 출력 방식이 다름)
-                articleL, articleR = st.columns([1,1])
-                with articleL:
-                    st.number_input("x 중심", key="dataCenterX", on_change=updateCenterPos, value=float(st.session_state.centerPos[0]))
-                with articleR:
-                    st.number_input("Y 중심", key="dataCenterY", on_change=updateCenterPos, value=float(st.session_state.centerPos[1]))
             
-                if len(event.selection['rows']):
-                    st.session_state.dataIndex = int(event.selection['rows'][0])
-                    if(st.button("[Show] {}".format(st.session_state.mysqlDepthDataAll.loc[st.session_state.dataIndex,['date']].iloc[0]))):
-                        dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)   # 거리 데이터 추출
-                        step4_data.Show3DRawData(dataRaw)
-                        print("Select Row", st.session_state.dataIndex)
-        
-        
+            # right Side
+            with article2:
+                    
+                # 초기 탭 상태 설정
+                if 'active_tab' not in st.session_state:
+                    st.session_state.active_tab = '측정 내역'
+
+                
+                tabs = st.tabs(["측정 내역", "3D 무보정"])
+                
+                with tabs[0]:
+                    
+                    st.markdown("###### 측정 내역") # 더 작음
+                    # Data Table (위와 동일한 형태로 중복성 방지 필요)
+                    event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['fistdt','lastdt','bin_nm','stock_ratio','stock_amt','desc']],
+                            column_config={
+                                "fistdt": st.column_config.Column(
+                                label="측정일자",
+                                ),
+                                "lastdt": st.column_config.Column(
+                                    label="측정시간",
+                                ),
+                                "bin_nm": st.column_config.Column(
+                                    label="장비번호",
+                                ),
+                                "stock_ratio": st.column_config.NumberColumn(
+                                    label="재고율",  
+                                    format="%.0f%%"  # 백분율(%) 변환 
+                                ),
+                                "stock_amt": st.column_config.Column(
+                                    label="재고량",
+                                ), 
+                                "desc": st.column_config.Column(
+                                    label="비고",
+                                    width=200
+                                )},
+                            on_select='rerun',
+                            selection_mode='single-row'
+                            )
+                    
+                
+                with tabs[1]:
+                    
+                    st.session_state.dataCenterX = 0.0    
+                    st.session_state.dataCenterY = 0.0
+                        
+                    st.markdown("###### 3D 무보정") # 더 작음
+                    with st.container():  # 컨텐츠 추가
+                        if len(event.selection['rows']):
+                            st.session_state.dataIndex = int(event.selection['rows'][0])
+                            dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)   # 거리 데이터 추출
+                            step4_data.Show3DRawData(dataRaw)
+                            print("Select Row", st.session_state.dataIndex)
+                    
+                    # Select Data (유사하나 출력 방식이 다름)
+                    articleL, articleR = st.columns([1,1])
+                    with articleL:
+                        st.number_input("x 중심", key="dataCenterX", on_change=updateCenterPos, value=float(st.session_state.centerPos[0]))
+                    with articleR:
+                        st.number_input("Y 중심", key="dataCenterY", on_change=updateCenterPos, value=float(st.session_state.centerPos[1]))
+                
         
         # 프로그램 Option 변경으로 Python의 변수를 활용함 (정리 혹은 변경 필요)
         elif choice == "기타":
