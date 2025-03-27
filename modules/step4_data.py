@@ -109,7 +109,7 @@ def Show3DFeed(dataRaw, dataSize):
     MinZ = int(min(z))
     ZdrawRange = [1.5*MinZ - 0.5 * MaxZ, 1.5 * MaxZ - 0.5 * MinZ]
     XYdrawRange = None
-    figureHeight = 800 #1000px
+    figureHeight = 600 #1000px
 
     display.Draw3DLayout(fig, "3D Mesh with Gridlines", XYdrawRange, ZdrawRange, figureHeight)  #관심영역 확대하여 출력
     fig = step3_func.Draw3DFeedAll(fig,dataModified,dataSize)
@@ -138,6 +138,6 @@ def Show3DRawData(dataRaw):
     fig = display.Display3DScatter(fig,dataRaw)
     fig = display.DisplayCenter(fig, Center, zRange)
     fig.update_layout(
-        height=800  # 높이를 1000px로 설정
+        height=600  # 높이를 1000px로 설정
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})

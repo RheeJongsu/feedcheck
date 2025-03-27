@@ -11,9 +11,9 @@ DISPLAY_MESH_COLORMAP = 'jet'           # Mesh의 면 색 (jet, bgr, turbo, rain
 DISPLAY_MESH_ALPHA = 100                # Mesh의 면 투명도   (0-100)
 
 #사표 표면에 격자선
-DISPLAY_GRID_COLOR = '#A9A9A9'          # Grid의 선에 대한 색
-DISPLAY_GRID_ALPHA = 80                 # Grid의 선의 투명도 (0-100)
-DISPLAY_GRID_WIDTH = 10                 # Grid의 선의 두께
+DISPLAY_GRID_COLOR = '#191939'          # Grid의 선에 대한 색
+DISPLAY_GRID_ALPHA = 90                 # Grid의 선의 투명도 (0-100)
+DISPLAY_GRID_WIDTH = 4                 # Grid의 선의 두께
 
 #사료통의 가로 원
 DISPLAY_WALL_COLOR = '#5B9BD5'

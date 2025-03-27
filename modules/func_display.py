@@ -63,7 +63,7 @@ def Draw3DMeshGrid(fig, df):
         z=z,
         #colorbar_title='Color Scale',              # 컬러바 제목
         intensity=z,                                # 색상을 결정하는 값 (intensity)
-        colorscale=param.DISPLAY_MESH_COLORMAP,     # jet 컬러맵 적용
+        colorscale=param.DISPLAY_MESH_COLORMAP,     # jet 컬러맵 적용       
         opacity=param.DISPLAY_MESH_ALPHA/100        # 투명도
     ))        
     

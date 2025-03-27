@@ -20,7 +20,20 @@ def MYSQL_Connect():
     
     ## Connect MYSQL [MYSQLconnect]
     MYSQLconnect = engine.connect()
+     
     return MYSQLconnect
+
+def MYSQL_Connection():
+    ## MYSQL Info [engine]
+    host = "constantec-db1.cba0g2ca0291.ap-northeast-2.rds.amazonaws.com"
+    port = 3306
+    username = "cons"
+    password = 'Mdb9367027!!'
+    db = 'cons'
+    stringSQL = "mysql+pymysql" + "://" + username + ':' + password + '@' + host + "/" + db
+    engine = create_engine(stringSQL)
+    return engine
+
 
 def AuthenticateUser(MYSQLconnect, username, password):     
     sql_state = "select user_nm  from tb_user where user_id = '" + str(username) + "' and password = '" + str(password) + "';"
@@ -68,9 +81,33 @@ def MysqlGetDepthData(MYSQLconnect, date_start, date_end, farm_seq, bin_Seq):
        sql_state += " and T3.bin_Seq = '" + bin_Seq + "' " \
                         
     sql_state += " and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;" 
-    
+     
     return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
 
+
+def MysqlGetDepthDataQuery(date_start, date_end, farm_seq, bin_Seq):
+    MYSQLconnection = MYSQL_Connection()
+    sql_state = "select T1.chk_date as date, LEFT(T1.chk_date, 10) as fistdt,  SUBSTR(T1.chk_date, 12, 5) as lastdt, " \
+                " T1.chg_volume as rawData, T1.chg_x as x, T1.chg_y as y, T1.chg_z as z, T1.std_volume, " \
+                " T1.std_amt, T1.stock_ratio, LPAD(CONCAT(FORMAT(ROUND(T1.stock_amt * 1000), 0), 'Kg'), 10, ' ') as stock_amt, " \
+                " T1.desc, T2.farm_nm, T3.bin_nm, T1.center_x, T1.center_y " \
+                " from tb_change_data T1, tb_farm T2, tb_feedbin T3 " \
+                " where  T1.chg_x !='' and T1.chk_date between '" + str(date_start) + "' and '" + str(date_end) + " 23:59:59' " \
+                " and T1.bin_seq = T3.bin_seq and T2.farm_seq = '" + farm_seq + "' "  
+                
+    if bin_Seq != "0":    
+       sql_state += " and T3.bin_Seq = '" + bin_Seq + "' " \
+                        
+    sql_state += " and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;" 
+    
+    print(" DepthData new Query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", sql_state)            
+    
+    try:
+        df = pd.read_sql_query(sql=text(sql_state), con=MYSQLconnection)
+    finally:
+        MYSQLconnection.dispose() # 연결 종료
+    return df
+ 
 def MysqlGetSizeFeedBin(MYSQLconnect):
     sql_state = "SELECT bin_serial_no as FeedBinSerialNo,bin_volume, top_diameter1 as top1, top_diameter2 as top2, top_height as top_H, " \
                 "mid_diameter1 as mid1, mid_diameter2 as mid2, mid_height as mid_H, " \
@@ -78,6 +115,22 @@ def MysqlGetSizeFeedBin(MYSQLconnect):
                 "lidar_height as lidar_h " \
                 "FROM tb_feedbin WHERE bot_diameter1 != 'NaN';"
     return pd.read_sql_query(sql=text(sql_state), con=MYSQLconnect)
+
+def MysqlGetSizeFeedBinQuery():
+    MYSQLconnection = MYSQL_Connection()
+    sql_state = "SELECT bin_serial_no as FeedBinSerialNo,bin_volume, top_diameter1 as top1, top_diameter2 as top2, top_height as top_H, " \
+                "mid_diameter1 as mid1, mid_diameter2 as mid2, mid_height as mid_H, " \
+                "bot_diameter1 as bot1, bot_diameter2 as bot2, bot_height as bot_H, " \
+                "lidar_height as lidar_h " \
+                "FROM tb_feedbin WHERE bot_diameter1 != 'NaN';"
+    
+    print(" DepthData new Query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", sql_state)            
+    
+    try:
+        df = pd.read_sql_query(sql=text(sql_state), con=MYSQLconnection)
+    finally:
+        MYSQLconnection.dispose() # 연결 종료
+    return df
 
 ### DB    
 def SelectDataFromMYSQL(df, index):

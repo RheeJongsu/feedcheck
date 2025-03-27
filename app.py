@@ -144,13 +144,14 @@ def main():
             if((st.session_state.searchingDateNew[0] == st.session_state.searchingDate[0]) and (st.session_state.searchingDateNew[1] == st.session_state.searchingDate[1])):
                 return
             else :
-                print(st.session_state.searchingDateNew)
-                print(st.session_state.searchingDate)
+                print(" ------------- new date ------------ ", st.session_state.searchingDateNew)
+                print(" ------------- old date ------------ ", st.session_state.searchingDate)
                 st.session_state.searchingDate[0] = st.session_state.searchingDateNew[0]
                 st.session_state.searchingDate[1] = st.session_state.searchingDateNew[1]
                 st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
                 st.session_state.IsLoad = True
-                
+                #st.cache_data.clear()
+                #st.cache_resource.clear()
          
     def updateCenterPos():
         st.session_state.centerPos[0] = st.session_state.dataCenterX
@@ -280,12 +281,12 @@ def main():
                 st.markdown("<br>", unsafe_allow_html=True)  # 🔹 공백 추가
 
                 if st.button(" 조 회 "):   
-                    initSearchingDate()
+                    #initSearchingDate()
                     #st.session_state.ConnDB = step3_func.MYSQL_Connect()
-                    #st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq)
-                    #st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBin(st.session_state.ConnDB)
-                    st.cache_data.clear()
-                    st.cache_resource.clear()
+                    st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
+                    st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBinQuery()
+                    #st.cache_data.clear()
+                    #st.cache_resource.clear()
 
                 # 상단 행 (초기 공백 생성)
                 placeholder = st.empty()
@@ -298,9 +299,8 @@ def main():
                     )
                     
                 # Data Table 
-                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
-                 
-          
+                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
+               
             # right Side
             with article2:
                  
@@ -443,9 +443,21 @@ def main():
                             key="searchingDateNew",
                             on_change=updateSearchingDate(farm_seq, bin_seq))
                 
+                
+                if st.button(" 조 회 "):   
+                    #initSearchingDate()
+                    #st.session_state.ConnDB = step3_func.MYSQL_Connect()
+                    st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
+                    st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBinQuery()
+                    #st.cache_data.clear()
+                    #st.cache_resource.clear()
+
+
                 # Data Table 
-                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
-                  
+                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
+              
+              
+              
                 # Data Table (위와 동일한 형태로 중복성 방지 필요)
                 event = st.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['fistdt','lastdt','bin_nm','stock_ratio','stock_amt','desc']],
                             column_config={
@@ -537,9 +549,19 @@ def main():
                         key="searchingDateNew",
                         on_change=updateSearchingDate(farm_seq, bin_seq))
 
+                
+                if st.button(" 조 회 "):   
+                    #initSearchingDate()
+                    #st.session_state.ConnDB = step3_func.MYSQL_Connect()
+                    st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
+                    st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBinQuery()
+                    #st.cache_data.clear()
+                    #st.cache_resource.clear()
+
+
                 # Data Table 
-                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthData(st.session_state.ConnDB, st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
-                  
+                st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
+                 
             
             # right Side
             with article2:
