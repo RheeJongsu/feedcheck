@@ -87,7 +87,11 @@ def MysqlGetDepthData(MYSQLconnect, date_start, date_end, farm_seq, bin_Seq):
 
 def MysqlGetDepthDataQuery(date_start, date_end, farm_seq, bin_Seq):
     MYSQLconnection = MYSQL_Connection()
-    sql_state = "select T1.chk_date as date, LEFT(T1.chk_date, 10) as fistdt,  SUBSTR(T1.chk_date, 12, 5) as lastdt, " \
+    sql_state = "select TAA.date, TAA.fistdt, TAA.lastdt, TAA.x, TAA.y, TAA.z, TAA.std_volume, " \
+                " TAA.std_amt, TAA.stock_ratio, TAA.stock_amt, TAA.desc, TAA.farm_nm, " \
+                " TAA.bin_nm, TAA.center_x, TAA.center_y " \
+                " from ( " \
+                " select T1.chk_date as date, LEFT(T1.chk_date, 10) as fistdt,  SUBSTR(T1.chk_date, 12, 5) as lastdt, " \
                 " T1.chg_volume as rawData, T1.chg_x as x, T1.chg_y as y, T1.chg_z as z, T1.std_volume, " \
                 " T1.std_amt, T1.stock_ratio, LPAD(CONCAT(FORMAT(ROUND(T1.stock_amt * 1000), 0), 'Kg'), 10, ' ') as stock_amt, " \
                 " T1.desc, T2.farm_nm, T3.bin_nm, T1.center_x, T1.center_y " \
@@ -98,7 +102,9 @@ def MysqlGetDepthDataQuery(date_start, date_end, farm_seq, bin_Seq):
     if bin_Seq != "0":    
        sql_state += " and T3.bin_Seq = '" + bin_Seq + "' " \
                         
-    sql_state += " and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;" 
+    # sql_state += " and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;" 
+    sql_state += " and T3.farm_seq = T2.farm_seq ) TAA " \
+                 " order by TAA.date desc  LIMIT 50; "
     
     print(" DepthData new Query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", sql_state)            
     
@@ -124,7 +130,7 @@ def MysqlGetSizeFeedBinQuery():
                 "lidar_height as lidar_h " \
                 "FROM tb_feedbin WHERE bot_diameter1 != 'NaN';"
     
-    print(" DepthData new Query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", sql_state)            
+    print(" FeedBin Size Query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", sql_state)            
     
     try:
         df = pd.read_sql_query(sql=text(sql_state), con=MYSQLconnection)

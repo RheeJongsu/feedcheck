@@ -234,7 +234,9 @@ def main():
             farm_df = step3_func.MysqlGetFarmNo(st.session_state.ConnDB, username)  #로그인 유저에게 허용된 농장 List를 조회
             bin_df = pd.DataFrame()
                 
-               
+            
+            print("00000000000000000") 
+                            
             # Left Side
             with article1:
                 
@@ -269,7 +271,12 @@ def main():
                     bin_seq = str(selected_bin_seq)
                 else:
                     bin_seq = None
+                    
+                    
+                    
+                print("11111111111111111") 
                          
+                              
                 # 검색일 선택
                 st.date_input("측정일을 선택하세요.",
                             value=st.session_state.searchingDate,
@@ -283,7 +290,7 @@ def main():
                 if st.button(" 조 회 "):   
                     #initSearchingDate()
                     #st.session_state.ConnDB = step3_func.MYSQL_Connect()
-                    st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
+                    #st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
                     st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBinQuery()
                     #st.cache_data.clear()
                     #st.cache_resource.clear()
@@ -309,6 +316,8 @@ def main():
                     st.session_state.active_tab = '측정 내역'
 
                 
+                print("22222222222222") 
+                         
                 tabs = st.tabs(["측정 내역", "3D 피드빈"])
                 
                 with tabs[0]:
@@ -344,6 +353,9 @@ def main():
                     # Select Data
                     if len(event.selection['rows']):
                         st.session_state.dataIndex = int(event.selection['rows'][0])
+                         
+                        print("33333333333333") 
+                         
                         dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)  # 거리 데이터 추출
                         # 사료통 크기 정보를 이용한 선택(동일 용량이 있는 경우 변경해야함) 
                         dataSize = step3_func.SelectSizeFeedBinFromSQL(st.session_state.mysqlFeedBinDataAll, st.session_state.mysqlDepthDataAll.std_volume[st.session_state.dataIndex])
@@ -358,7 +370,11 @@ def main():
                     with placeholder:  # placeholder에 콘텐츠를 추가 
                     
                         strFarmNm = ""; strFistdt = ""; strLastdt = ""; strStockRatio = ""; strStockAmt = ""
-                                            
+                    
+                    
+                        print("444444444444444444") 
+                         
+                                                 
                         if len(event.selection['rows']):
                             strFarmNm = selected_row['farm_nm']
                             strFistdt = str(selected_row['fistdt'])
@@ -373,13 +389,15 @@ def main():
                             + '% &nbsp &nbsp' + strStockAmt + ' </p> <br> ',
                             unsafe_allow_html=True
                         )
-                        
-                        
-                            
+                
                     # event = st.data_editor(...) 또는 st.dataframe(...)
 
                 with tabs[1]:
                     
+                    
+                    print("5555555555555") 
+                         
+                         
                     st.markdown("###### 3D 피드빈") # 더 작음
                     with st.container():  # 컨텐츠 추가
                         if(st.session_state.dataRaw is not None):
@@ -447,7 +465,7 @@ def main():
                 if st.button(" 조 회 "):   
                     #initSearchingDate()
                     #st.session_state.ConnDB = step3_func.MYSQL_Connect()
-                    st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
+                    #st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
                     st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBinQuery()
                     #st.cache_data.clear()
                     #st.cache_resource.clear()
@@ -553,7 +571,7 @@ def main():
                 if st.button(" 조 회 "):   
                     #initSearchingDate()
                     #st.session_state.ConnDB = step3_func.MYSQL_Connect()
-                    st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
+                    #st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
                     st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetSizeFeedBinQuery()
                     #st.cache_data.clear()
                     #st.cache_resource.clear()

@@ -27,7 +27,7 @@ def connect_data(ConnDB):
 
     # 데이터 가져오기
     try:
-        dfAll = step3_func.MysqlGetDepthData(ConnDB, str(date_start), str(date_end))
+        dfAll = step3_func.MysqlGetDepthDataQuery(ConnDB, str(date_start), str(date_end))
         sizeFeedBinAll = step3_func.MysqlGetSizeFeedBin(ConnDB)
 
         # 입력한 SerialFeedBin에 해당하는 FeedBin 정보만 필터링
