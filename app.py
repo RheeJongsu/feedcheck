@@ -16,7 +16,7 @@ empty1, Contents1, empty2 = st.columns([0.1,1,0.1])
 article1, article2= st.columns(2)
 
 # Constants
-DefaultDeltaDate = 10
+DefaultDeltaDate = 5
 
 def initSearchingDate():
     today = datetime.datetime.now(pytz.timezone('Asia/Seoul')).date()
@@ -353,6 +353,14 @@ def main():
                     # Select Data
                     if len(event.selection['rows']):
                         st.session_state.dataIndex = int(event.selection['rows'][0])
+                        
+                        
+                        print("22222222222222222222 --- 33333333333333", farm_seq) 
+                        print(st.session_state.mysqlDepthDataAll.columns)
+                        print("22222222222222222222 --- 44444444444445", st.session_state.mysqlDepthDataAll.bin_seq[st.session_state.dataIndex]) 
+                        bin_seq = st.session_state.mysqlDepthDataAll.bin_seq[st.session_state.dataIndex]
+                        
+                        st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery2(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
                          
                         print("33333333333333") 
                          
@@ -505,10 +513,15 @@ def main():
                 # Select Data (위와 동일한 형태로 중복성 방지 필요)
                 if len(event.selection['rows']):
                     st.session_state.dataIndex = int(event.selection['rows'][0])
+                    
                     if(st.button("[Show] {}".format(st.session_state.mysqlDepthDataAll.loc[st.session_state.dataIndex,['date']].iloc[0]))):
+                         
+                        print(st.session_state.mysqlDepthDataAll.columns) 
+                        bin_seq = st.session_state.mysqlDepthDataAll.bin_seq[st.session_state.dataIndex]                        
+                        st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery2(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)                          
                         dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)  # 거리 데이터 추출
-                        # 사료통 크기 정보를 이용한 선택(동일 용량이 있는 경우 변경해야함)
-                        dataSize = step3_func.SelectSizeFeedBinFromSQL(st.session_state.mysqlFeedBinDataAll, st.session_state.mysqlDepthDataAll.std_volume[st.session_state.dataIndex])
+                        # 사료통 크기 정보를 이용한 선택(동일 용량이 있는 경우 변경해야함) 
+                        dataSize = step3_func.SelectSizeFeedBinFromSQL(st.session_state.mysqlFeedBinDataAll, st.session_state.mysqlDepthDataAll.std_volume[st.session_state.dataIndex])                          
                         selected_feedbin = st.session_state.mysqlFeedBinDataAll[st.session_state.mysqlFeedBinDataAll['FeedBinSerialNo'] == dataSize.FeedBinSerialNo.iloc[0]]
                         st.dataframe(selected_feedbin)
                         if(dataRaw is not None):
@@ -630,10 +643,14 @@ def main():
                     st.markdown("###### 3D 무보정") # 더 작음
                     with st.container():  # 컨텐츠 추가
                         if len(event.selection['rows']):
-                            st.session_state.dataIndex = int(event.selection['rows'][0])
+                             
+                            st.session_state.dataIndex = int(event.selection['rows'][0]) 
+                            bin_seq = st.session_state.mysqlDepthDataAll.bin_seq[st.session_state.dataIndex] 
+                            st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery2(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)                              
                             dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)   # 거리 데이터 추출
+                            
                             step4_data.Show3DRawData(dataRaw)
-                            print("Select Row", st.session_state.dataIndex)
+                            #print("Select Row", st.session_state.dataIndex)
                     
                     # Select Data (유사하나 출력 방식이 다름)
                     articleL, articleR = st.columns([1,1])

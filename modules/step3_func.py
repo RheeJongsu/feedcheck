@@ -78,7 +78,7 @@ def MysqlGetDepthData(MYSQLconnect, date_start, date_end, farm_seq, bin_Seq):
                 " and T1.bin_seq = T3.bin_seq and T2.farm_seq = '" + farm_seq + "' "  
                 
     if bin_Seq != "0":    
-       sql_state += " and T3.bin_Seq = '" + bin_Seq + "' " \
+       sql_state += " and T3.bin_Seq = '" + str(bin_Seq)  + "' " \
                         
     sql_state += " and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;" 
      
@@ -87,20 +87,20 @@ def MysqlGetDepthData(MYSQLconnect, date_start, date_end, farm_seq, bin_Seq):
 
 def MysqlGetDepthDataQuery(date_start, date_end, farm_seq, bin_Seq):
     MYSQLconnection = MYSQL_Connection()
-    sql_state = "select TAA.date, TAA.fistdt, TAA.lastdt, TAA.x, TAA.y, TAA.z, TAA.std_volume, " \
+    sql_state = "select TAA.date, TAA.bin_seq, TAA.fistdt, TAA.lastdt, TAA.std_volume, " \
                 " TAA.std_amt, TAA.stock_ratio, TAA.stock_amt, TAA.desc, TAA.farm_nm, " \
                 " TAA.bin_nm, TAA.center_x, TAA.center_y " \
                 " from ( " \
-                " select T1.chk_date as date, LEFT(T1.chk_date, 10) as fistdt,  SUBSTR(T1.chk_date, 12, 5) as lastdt, " \
-                " T1.chg_volume as rawData, T1.chg_x as x, T1.chg_y as y, T1.chg_z as z, T1.std_volume, " \
-                " T1.std_amt, T1.stock_ratio, LPAD(CONCAT(FORMAT(ROUND(T1.stock_amt * 1000), 0), 'Kg'), 10, ' ') as stock_amt, " \
+                " select T1.chk_date as date, T1.bin_seq, LEFT(T1.chk_date, 10) as fistdt,  SUBSTR(T1.chk_date, 12, 5) as lastdt, " \
+                " T1.std_volume, T1.std_amt, T1.stock_ratio, " \
+                " LPAD(CONCAT(FORMAT(ROUND(T1.stock_amt * 1000), 0), 'Kg'), 10, ' ') as stock_amt, " \
                 " T1.desc, T2.farm_nm, T3.bin_nm, T1.center_x, T1.center_y " \
                 " from tb_change_data T1, tb_farm T2, tb_feedbin T3 " \
                 " where  T1.chg_x !='' and T1.chk_date between '" + str(date_start) + "' and '" + str(date_end) + " 23:59:59' " \
                 " and T1.bin_seq = T3.bin_seq and T2.farm_seq = '" + farm_seq + "' "  
                 
     if bin_Seq != "0":    
-       sql_state += " and T3.bin_Seq = '" + bin_Seq + "' " \
+       sql_state += " and T3.bin_Seq = '" + str(bin_Seq)  + "' " \
                         
     # sql_state += " and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;" 
     sql_state += " and T3.farm_seq = T2.farm_seq ) TAA " \
@@ -113,6 +113,38 @@ def MysqlGetDepthDataQuery(date_start, date_end, farm_seq, bin_Seq):
     finally:
         MYSQLconnection.dispose() # 연결 종료
     return df
+
+
+def MysqlGetDepthDataQuery2(date_start, date_end, farm_seq, bin_Seq):
+    MYSQLconnection = MYSQL_Connection()
+    sql_state = "select TAA.date, TAA.bin_seq, TAA.fistdt, TAA.lastdt, TAA.x, TAA.y, TAA.z, TAA.std_volume, " \
+                " TAA.std_amt, TAA.stock_ratio, TAA.stock_amt, TAA.desc, TAA.farm_nm, " \
+                " TAA.bin_nm, TAA.center_x, TAA.center_y " \
+                " from ( " \
+                " select T1.chk_date as date, T1.bin_seq, LEFT(T1.chk_date, 10) as fistdt,  SUBSTR(T1.chk_date, 12, 5) as lastdt, " \
+                "  T1.chg_x as x, T1.chg_y as y, T1.chg_z as z, T1.std_volume, T1.std_amt, " \
+                "  T1.stock_ratio, LPAD(CONCAT(FORMAT(ROUND(T1.stock_amt * 1000), 0), 'Kg'), 10, ' ') as stock_amt, " \
+                "  T1.desc, T2.farm_nm, T3.bin_nm, T1.center_x, T1.center_y " \
+                " from tb_change_data T1, tb_farm T2, tb_feedbin T3 " \
+                " where  T1.chg_x !='' and T1.chk_date between '" + str(date_start) + "' and '" + str(date_end) + " 23:59:59' " \
+                " and T1.bin_seq = T3.bin_seq and T2.farm_seq = '" + farm_seq + "' "  
+                
+    if bin_Seq != "0":    
+       sql_state += " and T3.bin_Seq = '" + str(bin_Seq)  + "' " \
+                        
+    # sql_state += " and T3.farm_seq = T2.farm_seq  order by T1.chk_date desc  LIMIT 50;" 
+    sql_state += " and T3.farm_seq = T2.farm_seq ) TAA " \
+                 " order by TAA.date desc  LIMIT 50; "
+    
+    print(" DepthData new Query 222222 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", sql_state)            
+    
+    try:
+        df = pd.read_sql_query(sql=text(sql_state), con=MYSQLconnection)
+    finally:
+        MYSQLconnection.dispose() # 연결 종료
+    return df
+
+
  
 def MysqlGetSizeFeedBin(MYSQLconnect):
     sql_state = "SELECT bin_serial_no as FeedBinSerialNo,bin_volume, top_diameter1 as top1, top_diameter2 as top2, top_height as top_H, " \
