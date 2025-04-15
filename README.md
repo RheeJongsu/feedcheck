@@ -14,7 +14,7 @@ pip install pymysql
 pip install pandas
 pip install sqlalchemy
 pip install plotly
-
+pip install paho-mqtt
 
 ## Add your files
 

@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import paho.mqtt.client as mqtt
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 import numpy as np
@@ -169,6 +170,78 @@ def MysqlGetSizeFeedBinQuery():
     finally:
         MYSQLconnection.dispose() # 연결 종료
     return df
+
+
+def MysqlGetBinSettingQuery(farm_seq, bin_Seq):
+    MYSQLconnection = MYSQL_Connection()
+    
+    sql_state = "SELECT  T0.farm_nm, T1.bin_seq, T1.bin_nm, T1.bin_loc, T3.mac_addr, T2.measure_day,  " \
+                "   T2.measure_time, T2.measure_interval, T2.cap_ven, T2.sw_ver, " \
+                "   CASE  WHEN T2.cap_open_div = '0' THEN 'close'  WHEN  T2.cap_open_div = '1' THEN 'open' END AS cap_open_div, " \
+                "   CASE  WHEN T2.fan_start_div = '0' THEN 'stop'  WHEN  T2.fan_start_div = '1' THEN 'start' END AS fan_start_div, " \
+                "   CASE  WHEN T2.stat_cap_open = '0' THEN '닫힘'  WHEN  T2.stat_cap_open = '1' THEN '열림' END AS stat_cap_open, " \
+                "   CASE  WHEN T2.stat_fan_start = '0' THEN '중지'  WHEN  T2.stat_fan_start = '1' THEN '가동' END AS stat_fan_start, " \
+                "   T2.stat_in_tmp, T2.stat_in_hum, T2.change_yn, T2.send_dt " \
+                " FROM   tb_farm T0, tb_feedbin T1, tb_feedbin_set T2, tb_lidar T3 " \
+                " WHERE  T0.farm_seq = T1.farm_seq " \
+                " AND    T0.farm_seq = '" + farm_seq + "' " \
+                    
+    if bin_Seq != "0":
+        sql_state += " and T1.bin_Seq = '" + str(bin_Seq)  + "' " \
+
+    sql_state += " AND    T1.bin_seq = T2.bin_seq " \
+                 " AND    T1.lidar_seq = T3.lidar_seq " \
+                 " ORDER BY T0.farm_nm, T1.bin_seq  LIMIT 50; "
+    
+    print(" BinSetting new Query  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", sql_state)            
+    
+    try:
+        df = pd.read_sql_query(sql=text(sql_state), con=MYSQLconnection)
+    finally:
+        MYSQLconnection.dispose() # 연결 종료
+    return df
+
+
+def MysqlSaveBinSettingQuery(SGL_BIN_SEQ, SGL_MEASURE_DAY,SGL_MEASURE_TIME, SGL_MEASURE_INT, SGL_CAP_OPEN, SGL_CAP_VEN, SGL_FAN_START):
+    MYSQLconnection = MYSQL_Connection()
+
+    sql_state = text("""
+                     
+        UPDATE tb_feedbin_set
+        SET   
+             change_yn = 'Y', 
+             send_dt = NULL, 
+             measure_day = :mday, 
+             measure_time = :mtime, 
+             measure_interval = :mint, 
+             cap_open_div = :capop, 
+             cap_ven = :capven, 
+             fan_start_div = :fanst 
+        WHERE bin_seq = :bin_seq
+        
+    """)
+
+    params = {
+        "mday": str(SGL_MEASURE_DAY),  # datetime.date → string
+        "mtime": SGL_MEASURE_TIME,
+        "mint": SGL_MEASURE_INT, 
+        "capop": SGL_CAP_OPEN, 
+        "capven": SGL_CAP_VEN,
+        "fanst": SGL_FAN_START,
+        "bin_seq": SGL_BIN_SEQ
+    }
+        
+    try:
+        with MYSQLconnection.connect() as conn:
+            with conn.begin():  # 트랜잭션
+                conn.execute(sql_state, params)
+    finally:
+        MYSQLconnection.dispose()
+        
+        
+    return "피드캡 설정을 변경했습니다."
+
+
 
 ### DB    
 def SelectDataFromMYSQL(df, index):
@@ -492,3 +565,13 @@ def GetFilteredData(dataRaw, dataSize):
     
     return [dataModified, dataBound]
 
+
+def publish_mqtt_message(topic, message):
+    client = mqtt.Client()
+    client.connect("test.mosquitto.org", 1883, 60)
+    client.publish(topic, message)
+    client.disconnect()
+     
+    #return "MQTT 메시지 전송완료했습니다."
+    
+    

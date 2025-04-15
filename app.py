@@ -179,7 +179,7 @@ def main():
             st.session_state.IsLoad = False
             st.rerun()
             
-        choice = st.sidebar.radio(" ", ["측정 데이터","측정 데이터(수직)","측정 데이터(무보정)", "기타"])
+        choice = st.sidebar.radio(" ", ["측정 데이터","측정 데이터(수직)","측정 데이터(무보정)", "피드캡 설정", "기타"])
         
         st.sidebar.text(" ") 
         st.sidebar.text(" ") 
@@ -222,10 +222,9 @@ def main():
                 st.rerun()
              
         
-        ## 최근 정보를 열람        
+        ## 최근 정보를 열람
         elif choice == "측정 데이터":
-              
-            
+        
             # 임시 코드 값 설정
             if "selected_code" not in st.session_state:
                 st.session_state.selected_code = ""
@@ -233,10 +232,7 @@ def main():
             username = st.session_state.userName
             farm_df = step3_func.MysqlGetFarmNo(st.session_state.ConnDB, username)  #로그인 유저에게 허용된 농장 List를 조회
             bin_df = pd.DataFrame()
-                
-            
-            print("00000000000000000") 
-                            
+                 
             # Left Side
             with article1:
                 
@@ -271,12 +267,7 @@ def main():
                     bin_seq = str(selected_bin_seq)
                 else:
                     bin_seq = None
-                    
-                    
-                    
-                print("11111111111111111") 
-                         
-                              
+                     
                 # 검색일 선택
                 st.date_input("측정일을 선택하세요.",
                             value=st.session_state.searchingDate,
@@ -314,10 +305,7 @@ def main():
                 # 초기 탭 상태 설정
                 if 'active_tab' not in st.session_state:
                     st.session_state.active_tab = '측정 내역'
-
-                
-                print("22222222222222") 
-                         
+ 
                 tabs = st.tabs(["측정 내역", "3D 피드빈"])
                 
                 with tabs[0]:
@@ -353,17 +341,9 @@ def main():
                     # Select Data
                     if len(event.selection['rows']):
                         st.session_state.dataIndex = int(event.selection['rows'][0])
-                        
-                        
-                        print("22222222222222222222 --- 33333333333333", farm_seq) 
-                        print(st.session_state.mysqlDepthDataAll.columns)
-                        print("22222222222222222222 --- 44444444444445", st.session_state.mysqlDepthDataAll.bin_seq[st.session_state.dataIndex]) 
-                        bin_seq = st.session_state.mysqlDepthDataAll.bin_seq[st.session_state.dataIndex]
-                        
-                        st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery2(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)
                          
-                        print("33333333333333") 
-                         
+                        bin_seq = st.session_state.mysqlDepthDataAll.bin_seq[st.session_state.dataIndex]                        
+                        st.session_state.mysqlDepthDataAll = step3_func.MysqlGetDepthDataQuery2(st.session_state.searchingDate[0], st.session_state.searchingDate[1], farm_seq, bin_seq)                          
                         dataRaw = step3_func.SelectDataFromMYSQL(st.session_state.mysqlDepthDataAll, st.session_state.dataIndex)  # 거리 데이터 추출
                         # 사료통 크기 정보를 이용한 선택(동일 용량이 있는 경우 변경해야함) 
                         dataSize = step3_func.SelectSizeFeedBinFromSQL(st.session_state.mysqlFeedBinDataAll, st.session_state.mysqlDepthDataAll.std_volume[st.session_state.dataIndex])
@@ -378,11 +358,7 @@ def main():
                     with placeholder:  # placeholder에 콘텐츠를 추가 
                     
                         strFarmNm = ""; strFistdt = ""; strLastdt = ""; strStockRatio = ""; strStockAmt = ""
-                    
-                    
-                        print("444444444444444444") 
-                         
-                                                 
+                                                                     
                         if len(event.selection['rows']):
                             strFarmNm = selected_row['farm_nm']
                             strFistdt = str(selected_row['fistdt'])
@@ -402,17 +378,11 @@ def main():
 
                 with tabs[1]:
                     
-                    
-                    print("5555555555555") 
-                         
-                         
                     st.markdown("###### 3D 피드빈") # 더 작음
                     with st.container():  # 컨텐츠 추가
                         if(st.session_state.dataRaw is not None):
                             step4_data.Show3DFeedBin(st.session_state.dataRaw, st.session_state.dataFeedBin)
-                    
-                      
-
+                     
             
         ## 특정 일의 데이터를 열람
         elif choice == "측정 데이터(수직)":
@@ -426,7 +396,6 @@ def main():
             
             # Left Side
             with article1:
-                
                  
                 # 농가 선택
                 if not farm_df.empty:
@@ -660,6 +629,287 @@ def main():
                         st.number_input("Y 중심", key="dataCenterY", on_change=updateCenterPos, value=float(st.session_state.centerPos[1]))
                 
         
+        elif choice == "피드캡 설정":
+            
+            # 임시 코드 값 설정
+            if "selected_code" not in st.session_state:
+                st.session_state.selected_code = ""
+            
+            username = st.session_state.userName
+            farm_df = step3_func.MysqlGetFarmNo(st.session_state.ConnDB, username)  #로그인 유저에게 허용된 농장 List를 조회
+        
+            # Layout
+            col1, col2, col3= st.columns(3)
+            with col1:  
+                # 농가 선택
+                if not farm_df.empty:
+                    farm_names = farm_df['farm_nm'].tolist()
+                    selected_farm = st.selectbox("농가 선택", farm_names, on_change=on_select_change)  
+                    
+                if not farm_df.empty and selected_farm:
+                    selected_farm_seq = farm_df[farm_df['farm_nm'] == selected_farm]['farm_seq'].iloc[0]
+                
+                if selected_farm_seq is not None:
+                    farm_seq = str(selected_farm_seq)
+                else:
+                    farm_seq = None
+                
+            with col2:     
+                # 피드빈 선택 
+                bin_df = step3_func.MysqlGetFeedcheckNo(st.session_state.ConnDB, farm_seq)  #로그인 유저에게 허용된 농장 List를 조회
+                    
+                # 피드빈 선택
+                if not bin_df.empty:
+                    bin_names = bin_df['bin_nm'].tolist()
+                    selected_bin = st.selectbox("피드빈 선택", bin_names, on_change=on_select_change)
+                    
+                if not bin_df.empty and selected_bin:
+                    selected_bin_seq = bin_df[bin_df['bin_nm'] == selected_bin]['bin_seq'].iloc[0]
+                else:
+                    selected_bin_seq = None    
+            
+                if selected_bin_seq is not None:
+                    bin_seq = str(selected_bin_seq)
+                else:
+                    bin_seq = None
+                   
+            with col3: 
+                st.markdown(
+                            '<br>',
+                            unsafe_allow_html=True
+                        )
+                if st.button(" 조 회 "):   
+                    st.session_state.mysqlFeedBinDataAll = step3_func.MysqlGetBinSettingQuery(farm_seq, bin_seq)
+              
+            
+            # Data Table
+            st.session_state.mysqlDepthDataAll = step3_func.MysqlGetBinSettingQuery(farm_seq, bin_seq)
+            
+             
+            st.markdown(
+                            '<br><p style="font-size: 14px; color: #fbcbfa; background-color: #3b3b5a; margin: 0;"> 전체적용 </p>  ',
+                            unsafe_allow_html=True
+                        )
+            
+            # Layout
+            col1, col2, col3, col4, col5 = st.columns([2, 0.5, 2, 0.5, 2])
+            with col1:  
+                DISPLAY_CAP_OPEN = st.select_slider("피드빈 Cap", options=["모두 열기", "모두 닫기"], value="모두 닫기")
+                
+            with col3:     
+                DISPLAY_CAP_VEN = st.slider("캡 오픈 각도", 0, 100, value=0, step=10)
+                   
+            with col5: 
+                DISPLAY_FAN_START = st.select_slider("피드빈 Fan", options=["모두 가동", "모두 중지"], value="모두 중지")
+            
+             
+            st.markdown(
+                            '<br><p style="font-size: 14px; color: #fbcbfa; background-color: #3b3b5a; margin: 0;"> 피드빈 설정 리스트 </p>  ',
+                            unsafe_allow_html=True
+                        )
+            
+            # ✅ 테이블 placeholder 생성
+            table_placeholder = st.empty()
+  
+            # Data Table (위와 동일한 형태로 중복성 방지 필요)
+            event = table_placeholder.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['farm_nm','bin_nm','bin_loc','measure_day', 'measure_time','measure_interval',
+                                                                                          'cap_open_div','cap_ven','fan_start_div', 'stat_cap_open','stat_fan_start','stat_in_tmp', 'stat_in_hum']],
+                        column_config={
+                            "farm_nm": st.column_config.Column(
+                                label="농가명",
+                            ),
+                            "bin_nm": st.column_config.Column(
+                                label="피드빈명",
+                            ),
+                            "bin_loc": st.column_config.Column(
+                                label="피드빈위치",
+                            ),
+                            "measure_day": st.column_config.Column(
+                                label="측정 시작일",   
+                            ),
+                            "measure_time": st.column_config.Column(
+                                label="측정 시작시간",   
+                            ),
+                            "measure_interval": st.column_config.Column(
+                                label="측정 간격",   
+                            ), 
+                            "cap_open_div": st.column_config.Column(
+                                label="캡 명령",   
+                            ),
+                            "cap_ven": st.column_config.Column(
+                                label="환기 각도",   
+                            ),
+                            "fan_start_div": st.column_config.Column(
+                                label="팬 명령",
+                            ),   
+                            "stat_cap_open": st.column_config.Column(
+                                label="캡 상태",
+                            ), 
+                            "stat_fan_start": st.column_config.Column(
+                                label="팬상태",
+                            ), 
+                            "stat_in_tmp": st.column_config.Column(
+                                label="온도",
+                            ), 
+                            "stat_in_hum": st.column_config.Column(
+                                label="습도", 
+                            )},
+                        on_select='rerun',
+                        selection_mode='single-row'
+                        )
+            
+            
+            st.markdown(
+                            '<br><p style="font-size: 14px; color: #fbcbfa; background-color: #3b3b5a; margin: 0;"> 피드빈 설정 상세 </p>  ',
+                            unsafe_allow_html=True
+                        )
+            
+            # 상단 행 (초기 공백 생성)
+            placeholder = st.empty()
+             
+            selected_row = None
+  
+            with placeholder:  # placeholder에 콘텐츠를 추가 
+                
+                strMeasureDt = ""; strMeasureInt = ""; strCapOpenDiv = ""; strCapVen = 0; strFanStartDiv = ""
+                                                                      
+                if len(event.selection['rows']):
+                     
+                     # 체크된 행의 정보를 한줄로 보여줌.
+                    selected_index = int(event.selection['rows'][0])
+                    selected_row = st.session_state.mysqlDepthDataAll.loc[selected_index]
+                        
+                        
+                    strMeasureDay = selected_row['measure_day']
+                    if strMeasureDay: 
+                        try:
+                            date_obj = datetime.datetime.strptime(strMeasureDay, "%Y%m%d").date()
+                        except ValueError:
+                            date_obj =  datetime.datetime.now().date()  # datetime.date 타입
+                    else:
+                        date_obj =  datetime.datetime.now().date()  # datetime.date 타입
+                        
+                    print(" ------------- date_obj date ------------ ", date_obj)    
+            
+                    strMeasureTime = selected_row['measure_time'] 
+                    print(" ------------- default_index time ------------ ", strMeasureTime)    
+                    
+                    SGL_BIN_SEQ = int(selected_row['bin_seq'])
+                    SGL_MAC_ADR = str(selected_row['mac_addr'])
+                    SGL_SW_VER = str(selected_row['sw_ver'])
+                    strMeasureInt = str(selected_row['measure_interval'])
+                    strCapOpenDiv = str(selected_row['cap_open_div'])
+                    strCapVen = int(selected_row['cap_ven'])
+                    strFanStartDiv = str(selected_row['fan_start_div']) 
+                    
+                    col1, col2, col3, col4, col5 = st.columns([2, 0.5, 2, 0.5, 2])
+                    
+                    with col1:  
+                        now = datetime.datetime.now()
+                        SGL_MEASURE_DAY =  st.date_input("측정 시작일", value=date_obj)
+                        SGL_CAP_OPEN = st.select_slider("CAP 상태", options=["open", "close"], value=strCapOpenDiv)
+                    with col3: 
+                        SGL_MEASURE_TIME = st.text_input("측정 시작시간(예: 1530)", value=strMeasureTime)
+                        SGL_CAP_VEN = st.slider("오픈 각도", 0, 100, value=strCapVen, step=10)
+                    with col5: 
+                        SGL_MEASURE_INT = st.text_input("측정 간격", value=strMeasureInt) 
+                        SGL_FAN_START = st.select_slider("FAN 상태", options=["start", "stop"], value=strFanStartDiv) 
+              
+                else:
+                    st.warning("피드빈을 먼저 선택하세요.")
+            
+            
+            if len(event.selection['rows']):
+                if st.button("저장"):
+                    
+                    if SGL_CAP_OPEN == "open":
+                        SGL_CAP_OPEN = "1" 
+                    else:
+                        SGL_CAP_OPEN = "0"
+                        
+                    if SGL_FAN_START == "start":
+                        SGL_FAN_START = "1" 
+                    else:
+                        SGL_FAN_START = "0"
+                    
+                    SGL_MEASURE_DAY = str(SGL_MEASURE_DAY).replace("-", "")
+                    #print("TEST =============>>>>", str(SGL_BIN_SEQ) + " " + SGL_MEASURE_DAY + " " + SGL_MEASURE_TIME + " " + SGL_MEASURE_INT + " " + SGL_CAP_OPEN + " " +  str(SGL_CAP_VEN) + " " + SGL_FAN_START  )
+                     
+                    result = step3_func.MysqlSaveBinSettingQuery(
+                        SGL_BIN_SEQ,
+                        SGL_MEASURE_DAY, SGL_MEASURE_TIME,  SGL_MEASURE_INT,
+                        SGL_CAP_OPEN, SGL_CAP_VEN, SGL_FAN_START
+                    ) 
+                     
+                    # 저장 MQTT 메시지 발송
+                    MQ_topic = "constantec/feedcap/" + SGL_MAC_ADR
+                    MQ_message = "MSDT:" + SGL_MEASURE_DAY[2:] + SGL_MEASURE_TIME + "!!MSINT:" + SGL_MEASURE_INT + "!!OPN:" + SGL_CAP_OPEN + "!!VEN:" + str(SGL_CAP_VEN) + "!!FAN:" + SGL_FAN_START + "!!SSID:feedcheck" + "!!SSPW:77778888"+ "!!VER:" + SGL_SW_VER
+                    step3_func.publish_mqtt_message(MQ_topic, MQ_message)
+                     
+                    # 메시지 영역 만들고 출력
+                    message_placeholder = st.empty()
+                    message_placeholder.success(result)
+
+                    # 2초 대기 후 메시지 지우기
+                    time.sleep(2)
+                    message_placeholder.empty()
+                    
+                    
+                     
+                    # 저장 후 리스트 재조회
+                    # df_result = step3_func.MysqlSelectBinList()  # 예: SELECT * FROM tb_bin ...
+                    st.session_state.mysqlDepthDataAll = step3_func.MysqlGetBinSettingQuery(farm_seq, bin_seq)
+                    
+                    # Data Table (위와 동일한 형태로 중복성 방지 필요)
+                    event = table_placeholder.dataframe(st.session_state.mysqlDepthDataAll.loc[:,['farm_nm','bin_nm','bin_loc','measure_day', 'measure_time','measure_interval',
+                                                                                          'cap_open_div','cap_ven','fan_start_div', 'stat_cap_open','stat_fan_start','stat_in_tmp', 'stat_in_hum']],
+                                column_config={
+                                    "farm_nm": st.column_config.Column(
+                                        label="농가명",
+                                    ),
+                                    "bin_nm": st.column_config.Column(
+                                        label="피드빈명",
+                                    ),
+                                    "bin_loc": st.column_config.Column(
+                                        label="피드빈위치",
+                                    ),
+                                    "measure_day": st.column_config.Column(
+                                        label="측정 시작일",   
+                                    ),
+                                    "measure_time": st.column_config.Column(
+                                        label="측정 시작시간",   
+                                    ),
+                                    "measure_interval": st.column_config.Column(
+                                        label="측정 간격",   
+                                    ), 
+                                    "cap_open_div": st.column_config.Column(
+                                        label="캡 상태",   
+                                    ),
+                                    "cap_ven": st.column_config.Column(
+                                        label="캡 오픈 각도",   
+                                    ),
+                                    "stat_cap_open": st.column_config.Column(
+                                        label="캡 상태",
+                                    ), 
+                                    "stat_fan_start": st.column_config.Column(
+                                        label="팬상태",
+                                    ), 
+                                    "fan_start_div": st.column_config.Column(
+                                        label="팬 상태",
+                                    ),  
+                                    "stat_in_tmp": st.column_config.Column(
+                                        label="온도",
+                                    ), 
+                                    "stat_in_hum": st.column_config.Column(
+                                        label="습도", 
+                                    )},
+                                on_select='rerun',
+                                selection_mode='single-row'
+                                )
+            
+            
+                    
+
         # 프로그램 Option 변경으로 Python의 변수를 활용함 (정리 혹은 변경 필요)
         elif choice == "기타":
             st.subheader("데이터 화면 옵션") 
